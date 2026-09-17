@@ -218,8 +218,30 @@ export class NotificationManager {
     const name = pet.name || 'Seu animalzinho';
     const species = pet.species ? pet.species.name : 'animal';
 
-    // 1. Alerta de Saúde Crítica / Doença (Prioridade Máxima)
-    if (pet.health <= 30 || pet.state === 'sick' || pet.state === 'critical') {
+    // 0. Alerta de Falecimento por Negligência (Prioridade Absoluta)
+    if (pet.state === 'deceased' || pet.health <= 0) {
+      this.sendNativeAlert(
+        `💔 ${name} faleceu por falta de cuidados`,
+        `Infelizmente seu animalzinho não resistiu à negligência prolongada. Acesse o Hospital da Fauna para socorrê-lo ou honrar sua memória.`,
+        'deceased',
+        true
+      );
+      return;
+    }
+
+    // 1. Alerta de Risco Iminente de Morte (< 15% de saúde)
+    if (pet.health <= 15) {
+      this.sendNativeAlert(
+        `⚠️ RISCO DE MORTE: ${name} está sucumbindo!`,
+        `A saúde de ${name} está em ${Math.round(pet.health)}%! Sem alimento e tratamento imediato, o animal poderá falecer!`,
+        'critical',
+        true
+      );
+      return;
+    }
+
+    // 2. Alerta de Saúde Debilitada / Doença
+    if (pet.health <= 35 || pet.state === 'sick' || pet.state === 'critical') {
       this.sendNativeAlert(
         `🚨 Alerta Veterinário: ${name} precisa de cuidados!`,
         `${name} está debilitado (Saúde: ${Math.round(pet.health)}%). Use um Elixir de Ervas para curá-lo imediatamente!`,

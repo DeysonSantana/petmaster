@@ -313,9 +313,7 @@ export class MinigameManager {
 
   endChuvaGame(score) {
     this.stopChuvaGame();
-    if (this.dom.chuvaOverlay) this.dom.chuvaOverlay.classList.remove('hidden');
-
-    const coinsEarned = Math.floor(score / 2);
+    const coinsEarned = Math.max(5, Math.floor(score / 2));
     this.app.addCoins(coinsEarned);
 
     if (this.app.pet) {
@@ -327,7 +325,36 @@ export class MinigameManager {
       window.confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
     }
 
-    alert(`🏁 Fim da Chuva de Alimentos!\n\nPontuação Final: ${score}\nRecompensa: +${coinsEarned} Moedas Ecológicas e Felicidade para o Pet!`);
+    this.app.showToast(`🪙 +${coinsEarned} Moedas ganhas! Carteira: ${this.app.coins} 🪙`, 'success');
+    soundFx.playCoin();
+
+    if (this.dom.chuvaOverlay) {
+      this.dom.chuvaOverlay.innerHTML = `
+        <div class="flex flex-col items-center justify-center text-center p-5 gap-3 bg-gray-950/95 rounded-3xl border border-emerald-500/40 backdrop-blur-md shadow-2xl max-w-[280px] w-full animate-in zoom-in-95">
+          <span class="text-4xl">🏁🍎</span>
+          <h4 class="font-display font-black text-base text-white">Chuva Encerrada!</h4>
+          <div class="flex flex-col gap-1.5 text-xs text-gray-300 w-full bg-gray-900/80 p-3 rounded-2xl border border-gray-800">
+            <div class="flex justify-between">
+              <span class="text-gray-400">Pontuação:</span>
+              <span class="font-bold text-emerald-400">${score} pts</span>
+            </div>
+            <div class="flex justify-between pt-1 border-t border-gray-800 font-extrabold text-amber-400">
+              <span>Moedas Ganhas:</span>
+              <span>+${coinsEarned} 🪙</span>
+            </div>
+          </div>
+          <button id="retry-chuva-btn" class="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-extrabold text-white text-xs shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 transition-transform active:scale-95">
+            <span>🔄</span>
+            <span>Jogar Novamente</span>
+          </button>
+        </div>
+      `;
+      this.dom.chuvaOverlay.classList.remove('hidden');
+      const retryBtn = document.getElementById('retry-chuva-btn');
+      if (retryBtn) {
+        retryBtn.addEventListener('click', () => this.startChuvaGame());
+      }
+    }
   }
 
   // ==========================================
@@ -419,7 +446,10 @@ export class MinigameManager {
       window.confetti({ particleCount: 70, spread: 60, origin: { y: 0.6 } });
     }
 
-    alert(`🧠 Excelente Memória!\n\nVocê completou a Memória da Fauna em ${moves} jogadas.\nRecompensa: +${coinsEarned} Moedas e Felicidade para o Pet!`);
+    this.app.showToast(`🧠 Memória concluída em ${moves} jogadas! +${coinsEarned} Moedas! Total: ${this.app.coins} 🪙`, 'success');
+    if (this.dom.startMemoriaBtn) {
+      this.dom.startMemoriaBtn.textContent = '🔄 Jogar Novamente';
+    }
   }
 
   // ==========================================
@@ -580,8 +610,6 @@ export class MinigameManager {
 
   endSaltoGame(coins, dist) {
     this.stopSaltoGame();
-    if (this.dom.saltoOverlay) this.dom.saltoOverlay.classList.remove('hidden');
-
     const totalCoins = coins + Math.floor(dist / 5);
     this.app.addCoins(totalCoins);
 
@@ -594,7 +622,40 @@ export class MinigameManager {
       window.confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
     }
 
-    alert(`🏃 Fim da Corrida no Bioma!\n\nDistância percorrida: ${dist} metros\nMoedas coletadas: ${coins}\nRecompensa Total: +${totalCoins} Moedas Ecológicas!`);
+    this.app.showToast(`🪙 +${totalCoins} Moedas ganhas! Carteira: ${this.app.coins} 🪙`, 'success');
+    soundFx.playCoin();
+
+    if (this.dom.saltoOverlay) {
+      this.dom.saltoOverlay.innerHTML = `
+        <div class="flex flex-col items-center justify-center text-center p-5 gap-3 bg-gray-950/95 rounded-3xl border border-indigo-500/40 backdrop-blur-md shadow-2xl max-w-[280px] w-full animate-in zoom-in-95">
+          <span class="text-4xl">💥🐾</span>
+          <h4 class="font-display font-black text-base text-white">Fim da Corrida!</h4>
+          <div class="flex flex-col gap-1.5 text-xs text-gray-300 w-full bg-gray-900/80 p-3 rounded-2xl border border-gray-800">
+            <div class="flex justify-between">
+              <span class="text-gray-400">Distância:</span>
+              <span class="font-bold text-indigo-400">${dist}m</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-400">Moedas Coletadas:</span>
+              <span class="font-bold text-amber-400">+${coins} 🪙</span>
+            </div>
+            <div class="flex justify-between pt-1 border-t border-gray-800 font-extrabold text-emerald-400">
+              <span>Total Adicionado:</span>
+              <span>+${totalCoins} 🪙</span>
+            </div>
+          </div>
+          <button id="retry-salto-btn" class="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 font-extrabold text-white text-xs shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 transition-transform active:scale-95">
+            <span>🔄</span>
+            <span>Jogar Novamente</span>
+          </button>
+        </div>
+      `;
+      this.dom.saltoOverlay.classList.remove('hidden');
+      const retryBtn = document.getElementById('retry-salto-btn');
+      if (retryBtn) {
+        retryBtn.addEventListener('click', () => this.startSaltoGame());
+      }
+    }
   }
 
   // ==========================================
@@ -654,14 +715,20 @@ export class MinigameManager {
     if (this.playerSequence[currentIndex] !== this.ritmoSequence[currentIndex]) {
       // Errou
       soundFx.playHurt();
-      if (this.dom.ritmoStatusDisplay) this.dom.ritmoStatusDisplay.textContent = 'Sequência incorreta!';
       const reward = Math.max(5, (this.ritmoRound - 1) * 8);
       this.app.addCoins(reward);
       if (this.app.pet) {
         this.app.pet.play(15, reward);
         this.app.saveGame();
       }
-      alert(`🎵 Melodia interrompida!\n\nVocê alcançou a Rodada ${this.ritmoRound}.\nRecompensa: +${reward} Moedas Ecológicas!`);
+      this.app.showToast(`🎵 Sequência incorreta na rodada ${this.ritmoRound}! Recompensa: +${reward} 🪙`, 'info');
+      if (this.dom.ritmoStatusDisplay) {
+        this.dom.ritmoStatusDisplay.textContent = `Errou na rodada ${this.ritmoRound}! +${reward} Moedas`;
+      }
+      if (this.dom.startRitmoBtn) {
+        this.dom.startRitmoBtn.textContent = '🔄 Tentar Novamente';
+        this.dom.startRitmoBtn.classList.remove('hidden');
+      }
       this.ritmoSequence = [];
       return;
     }

@@ -513,6 +513,50 @@
        5. MODAIS DA SPA
        ========================================== -->
 
+  <!-- MODAL: ANIMAL FALECIDO (MEMORIAL & RESGATE) -->
+  <div id="deceased-modal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="glass-card rounded-3xl max-w-md w-full p-6 flex flex-col gap-4 border border-rose-500/40 text-center shadow-2xl">
+      <div class="w-16 h-16 rounded-3xl bg-rose-950/60 border border-rose-500/50 flex items-center justify-center text-4xl mx-auto shadow-inner animate-pulse">
+        🪦
+      </div>
+      <div>
+        <h3 class="font-display text-xl font-extrabold text-white">Seu Animalzinho Faleceu</h3>
+        <p id="deceased-pet-desc" class="text-xs text-gray-300 mt-1 leading-relaxed">
+          Infelizmente, a falta prolongada de cuidados essenciais (fome e saúde esgotadas) fez com que seu animalzinho não resistisse. No Santuário, a preservação da vida exige dedicação constante do guardião!
+        </p>
+      </div>
+
+      <div class="p-3.5 rounded-2xl bg-gray-900/80 border border-gray-800 text-left text-xs space-y-1.5">
+        <div class="flex justify-between">
+          <span class="text-gray-400">Animal:</span>
+          <span id="deceased-pet-name" class="font-bold text-white">Pipoca</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-400">Estágio Alcançado:</span>
+          <span id="deceased-pet-stage" class="font-bold text-amber-400">Filhote</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-400">Causa:</span>
+          <span class="font-bold text-rose-400">Negligência de Recursos</span>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-2.5 pt-1">
+        <!-- Botão 1: Tratamento Veterinário de Emergência -->
+        <button id="revive-pet-btn" type="button" class="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 font-bold text-white text-xs shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 transition-transform active:scale-98">
+          <span>🩺</span>
+          <span>Socorrer no Hospital da Fauna (<span id="revive-cost-text">50 Moedas</span>)</span>
+        </button>
+
+        <!-- Botão 2: Honrar Memória e Adotar Novo Pet -->
+        <button id="adopt-after-deceased-btn" type="button" class="w-full py-3 px-4 rounded-2xl bg-gray-800 hover:bg-gray-700 border border-gray-700 font-bold text-gray-200 text-xs flex items-center justify-center gap-2 transition-colors">
+          <span>🌱</span>
+          <span>Honrar Memória & Adotar Novo Pet</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL: RENOMEAR PET -->
   <div id="rename-pet-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="glass-card rounded-3xl max-w-sm w-full p-5 flex flex-col gap-4 border border-emerald-500/40">

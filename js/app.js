@@ -30,6 +30,7 @@ class PetMasterApp {
     this.notificationTimer = 0;
     this.weatherTimer = 0;
     this.hasInitialWeather = false;
+    this.deceasedModalShown = false;
 
     // Cache de referências DOM para máxima eficiência
     this.dom = {};
@@ -190,7 +191,15 @@ class PetMasterApp {
       weatherTime: document.getElementById('weather-time'),
       habitatBiomeBadge: document.getElementById('habitat-biome-badge'),
       habitatBiomeIcon: document.getElementById('habitat-biome-icon'),
-      habitatBiomeName: document.getElementById('habitat-biome-name')
+      habitatBiomeName: document.getElementById('habitat-biome-name'),
+
+      // Animal Falecido (Memorial & Resgate)
+      deceasedModal: document.getElementById('deceased-modal'),
+      deceasedPetName: document.getElementById('deceased-pet-name'),
+      deceasedPetStage: document.getElementById('deceased-pet-stage'),
+      revivePetBtn: document.getElementById('revive-pet-btn'),
+      reviveCostText: document.getElementById('revive-cost-text'),
+      adoptAfterDeceasedBtn: document.getElementById('adopt-after-deceased-btn')
     };
   }
 
@@ -289,6 +298,13 @@ class PetMasterApp {
         this.renderPetAvatar();
         if (this.pet3D) {
           this.pet3D.update(clampedDelta);
+        }
+
+        // Se o animal acabou de falecer e o modal ainda não foi apresentado
+        if (this.pet.state === PET_STATES.DECEASED && !this.deceasedModalShown) {
+          this.deceasedModalShown = true;
+          soundFx.playDeceased();
+          setTimeout(() => this.openDeceasedModal(), 800);
         }
       }
 
@@ -436,14 +452,77 @@ class PetMasterApp {
     }
   }
 
+  // ==========================================
+  // MODAL DE ANIMAL FALECIDO (MEMORIAL & RESGATE)
+  // ==========================================
+  openDeceasedModal() {
+    if (!this.dom.deceasedModal || !this.pet) return;
+    if (this.dom.deceasedPetName) this.dom.deceasedPetName.textContent = this.pet.name;
+    if (this.dom.deceasedPetStage) {
+      const stageMap = { egg: 'Ovo', baby: 'Filhote', teen: 'Jovem', adult: 'Adulto' };
+      this.dom.deceasedPetStage.textContent = stageMap[this.pet.stage] || this.pet.stage;
+    }
+    if (this.dom.reviveCostText) {
+      this.dom.reviveCostText.textContent = this.coins >= 50 ? '50 Moedas' : 'Auxílio Gratuito';
+    }
+    this.dom.deceasedModal.classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
+    soundFx.playClick();
+  }
+
+  closeDeceasedModal() {
+    if (!this.dom.deceasedModal) return;
+    this.dom.deceasedModal.classList.add('hidden');
+    document.body.classList.remove('overflow-hidden');
+    soundFx.playClick();
+  }
+
+  handleRevivePet() {
+    if (!this.pet) return;
+
+    if (this.coins >= 50) {
+      this.spendCoins(50);
+      this.showToast('🩺 O Hospital da Fauna socorreu seu animal com sucesso (-50 moedas)!', 'success');
+    } else {
+      this.coins = 0;
+      this.updateCoinsUI();
+      this.saveGame();
+      this.showToast('🩺 O Santuário concedeu auxílio veterinário emergencial gratuito para salvar a vida do seu pet!', 'success');
+    }
+
+    this.pet.revive(35);
+    this.saveGame();
+    this.deceasedModalShown = false;
+    this.closeDeceasedModal();
+    this.updateStaticPetInfo();
+    this.renderPetHUD();
+    this.renderPetAvatar();
+    if (this.pet3D) this.pet3D.buildPet(this.pet);
+    soundFx.playHeal();
+    this.spawnFloatingEffect('💚');
+  }
+
+  handleAdoptAfterDeceased() {
+    if (!this.pet) return;
+    this.closeDeceasedModal();
+    this.deceasedModalShown = false;
+    if (this.sanctuary) {
+      this.sanctuary.openAdoptModal();
+    }
+  }
+
   renderPetHUD() {
     const p = this.pet;
     if (!p) return;
 
     // Estágio e Nível
     if (this.dom.petStageBadge) {
-      const stageMap = { egg: '🥚 Ovo', baby: '🐹 Filhote', teen: '🦫 Jovem', adult: '🐾 Adulto' };
-      this.dom.petStageBadge.textContent = stageMap[p.stage] || p.stage;
+      if (p.state === PET_STATES.DECEASED) {
+        this.dom.petStageBadge.textContent = '🪦 Faleceu';
+      } else {
+        const stageMap = { egg: '🥚 Ovo', baby: '🐹 Filhote', teen: '🦫 Jovem', adult: '🐾 Adulto' };
+        this.dom.petStageBadge.textContent = stageMap[p.stage] || p.stage;
+      }
     }
     if (this.dom.petLevelDisplay) {
       this.dom.petLevelDisplay.textContent = `Nv. ${p.level}`;
@@ -533,6 +612,11 @@ class PetMasterApp {
         animClass = 'animate-pet-sick opacity-60';
         bubbleText = 'Preciso de remédio urgente! 🚨';
         break;
+      case PET_STATES.DECEASED:
+        animClass = 'opacity-50 filter grayscale contrast-125';
+        bubbleText = 'Faleceu por falta de cuidados... 🪦🕊️';
+        if (this.dom.petAvatar) this.dom.petAvatar.textContent = '🪦';
+        break;
       default:
         if (p.hunger < 25) bubbleText = 'Estou com fome! 🍎';
         else if (p.hygiene < 25) bubbleText = 'Preciso de banho! 🧼';
@@ -564,6 +648,10 @@ class PetMasterApp {
     // Interação de Carinho / Toque direto no Pet
     if (this.dom.petAvatar) {
       this.dom.petAvatar.addEventListener('click', () => {
+        if (this.pet && this.pet.state === PET_STATES.DECEASED) {
+          this.openDeceasedModal();
+          return;
+        }
         if (this.pet3D) this.pet3D.triggerAffectionGesture();
         if (this.pet.stage === GROWTH_STAGES.EGG) {
           const hatched = this.pet.warmEgg();
@@ -584,6 +672,14 @@ class PetMasterApp {
       });
     }
 
+    // Botões do Modal de Animal Falecido
+    if (this.dom.revivePetBtn) {
+      this.dom.revivePetBtn.addEventListener('click', () => this.handleRevivePet());
+    }
+    if (this.dom.adoptAfterDeceasedBtn) {
+      this.dom.adoptAfterDeceasedBtn.addEventListener('click', () => this.handleAdoptAfterDeceased());
+    }
+
     // Renomeação do Pet
     if (this.dom.renamePetBtn) this.dom.renamePetBtn.addEventListener('click', () => this.openRenameModal());
     if (this.dom.closeRenameModalBtn) this.dom.closeRenameModalBtn.addEventListener('click', () => this.closeRenameModal());
@@ -597,12 +693,24 @@ class PetMasterApp {
 
     // Dock: Alimentar
     if (this.dom.dockFeedBtn) {
-      this.dom.dockFeedBtn.addEventListener('click', () => this.openFoodModal());
+      this.dom.dockFeedBtn.addEventListener('click', () => {
+        if (this.pet && this.pet.state === PET_STATES.DECEASED) {
+          this.showToast('💔 Seu animalzinho faleceu por falta de cuidados. Acesse o Hospital da Fauna.', 'error');
+          this.openDeceasedModal();
+          return;
+        }
+        this.openFoodModal();
+      });
     }
 
     // Dock: Banho
     if (this.dom.dockCleanBtn) {
       this.dom.dockCleanBtn.addEventListener('click', () => {
+        if (this.pet && this.pet.state === PET_STATES.DECEASED) {
+          this.showToast('💔 Seu animalzinho faleceu por falta de cuidados.', 'error');
+          this.openDeceasedModal();
+          return;
+        }
         if (this.inventory.soap > 0) {
           const res = this.pet.clean();
           if (res.success) {
@@ -626,6 +734,11 @@ class PetMasterApp {
     // Dock: Dormir / Acordar
     if (this.dom.dockSleepBtn) {
       this.dom.dockSleepBtn.addEventListener('click', () => {
+        if (this.pet && this.pet.state === PET_STATES.DECEASED) {
+          this.showToast('💔 Seu animalzinho está em descanso eterno.', 'error');
+          this.openDeceasedModal();
+          return;
+        }
         const res = this.pet.toggleSleep();
         if (res.success) {
           if (res.sleeping) {
@@ -646,6 +759,11 @@ class PetMasterApp {
     // Dock: Minigames
     if (this.dom.dockPlayBtn) {
       this.dom.dockPlayBtn.addEventListener('click', () => {
+        if (this.pet && this.pet.state === PET_STATES.DECEASED) {
+          this.showToast('💔 Seu animalzinho faleceu. Reanime-o no Hospital da Fauna para voltar a brincar.', 'error');
+          this.openDeceasedModal();
+          return;
+        }
         if (this.minigames) this.minigames.openModal();
       });
     }
@@ -653,6 +771,10 @@ class PetMasterApp {
     // Dock: Remédio
     if (this.dom.dockHealBtn) {
       this.dom.dockHealBtn.addEventListener('click', () => {
+        if (this.pet && this.pet.state === PET_STATES.DECEASED) {
+          this.openDeceasedModal();
+          return;
+        }
         if (this.pet.health >= 100 && this.pet.state !== PET_STATES.SICK) {
           this.showToast('O pet já está perfeitamente saudável!', 'info');
           return;

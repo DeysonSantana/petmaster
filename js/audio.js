@@ -331,6 +331,91 @@ class SoundEffects {
     });
   }
 
+  // Dano / Colisão / Erro em Minigames
+  playHurt() {
+    if (this.muted) return;
+    this.init();
+    if (!this.ctx) return;
+
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(260, now);
+    osc.frequency.exponentialRampToValueAtTime(70, now + 0.18);
+
+    gain.gain.setValueAtTime(0.12, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.18);
+  }
+
+  // Conquista / Subida de Nível / Vitória em Minigame
+  playLevelUp() {
+    if (this.muted) return;
+    this.init();
+    if (!this.ctx) return;
+
+    const now = this.ctx.currentTime;
+    const notes = [
+      { f: 440.00, d: 0.08 },
+      { f: 554.37, d: 0.08 },
+      { f: 659.25, d: 0.08 },
+      { f: 880.00, d: 0.3 }
+    ];
+
+    let t = now;
+    notes.forEach((n) => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(n.f, t);
+
+      gain.gain.setValueAtTime(0.12, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + n.d);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(t);
+      osc.stop(t + n.d);
+
+      t += n.d * 0.85;
+    });
+  }
+
+  // Falecimento / Melodia Fúnebre Suave
+  playDeceased() {
+    if (this.muted) return;
+    this.init();
+    if (!this.ctx) return;
+
+    const now = this.ctx.currentTime;
+    const notes = [293.66, 261.63, 220.00, 174.61]; // D4, C4, A3, F3
+    notes.forEach((freq, idx) => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + idx * 0.25);
+
+      gain.gain.setValueAtTime(0.1, now + idx * 0.25);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.25 + 0.35);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(now + idx * 0.25);
+      osc.stop(now + idx * 0.25 + 0.35);
+    });
+  }
+
   // Tom musical procedural para minigames de ritmo (senóide pura com envelope)
   playTone(freq = 440, duration = 0.25) {
     if (this.muted) return;
@@ -354,7 +439,22 @@ class SoundEffects {
   }
 }
 
-export const soundFx = new SoundEffects();
+// Instância com Proxy de Resiliência para Garantir que Nenhum Efeito Inexistente Provoque Exceções
+const rawSoundFx = new SoundEffects();
+export const soundFx = new Proxy(rawSoundFx, {
+  get(target, prop) {
+    if (prop in target) {
+      const val = target[prop];
+      return typeof val === 'function' ? val.bind(target) : val;
+    }
+    if (typeof prop === 'string' && prop.startsWith('play')) {
+      return () => {
+        console.warn(`[SoundEffects] Efeito sonoro "${prop}" chamado sem implementação; fallback seguro executado.`);
+      };
+    }
+    return target[prop];
+  }
+});
 
 // Desbloqueio do contexto no primeiro clique do usuário
 if (typeof window !== 'undefined') {
@@ -368,3 +468,4 @@ if (typeof window !== 'undefined') {
   window.addEventListener('touchstart', unlockAudio, { passive: true });
   window.addEventListener('keydown', unlockAudio, { passive: true });
 }
+

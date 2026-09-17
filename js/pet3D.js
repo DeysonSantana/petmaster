@@ -1002,6 +1002,14 @@ export class Pet3DEngine {
         this.currentMeshGroup.position.y = -0.05;
         break;
 
+      case 'deceased':
+        // Deitado serenamente em descanso eterno
+        this.currentMeshGroup.position.y = -0.22;
+        this.currentMeshGroup.rotation.z = 1.35;
+        this.currentMeshGroup.rotation.x = -0.25;
+        u.headGroup.rotation.x = 0.5;
+        break;
+
       default: // Idle natural
         u.headGroup.rotation.y = Math.sin(t * 1.3) * 0.14;
         u.headGroup.rotation.x = Math.cos(t * 0.9) * 0.07;
@@ -1087,6 +1095,13 @@ export class Pet3DEngine {
   // CARINHO INTERATIVO E GESTOS DE TOQUE
   // ==========================================
   triggerAffectionGesture() {
+    if (this.app && this.app.pet && this.app.pet.state === 'deceased') {
+      if (this.app.openDeceasedModal) {
+        this.app.openDeceasedModal();
+      }
+      return;
+    }
+
     this.playGesture('petting');
 
     if (this.app && this.app.pet) {

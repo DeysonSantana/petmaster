@@ -13,7 +13,8 @@ export const PET_STATES = {
   SLEEPING: 'sleeping',
   PLAYING: 'playing',
   SICK: 'sick',
-  CRITICAL: 'critical'
+  CRITICAL: 'critical',
+  DECEASED: 'deceased'
 };
 
 export const GROWTH_STAGES = {
@@ -90,6 +91,13 @@ export class Pet {
       return;
     }
 
+    // Se o animal faleceu, cessa todo decaimento e mantém estado
+    if (this.state === PET_STATES.DECEASED) {
+      this.health = 0;
+      this.lastUpdated = Date.now();
+      return;
+    }
+
     // Gerenciador de estados com timer temporário (ex: mastigando, tomando banho)
     if (this.stateDuration > 0) {
       this.stateTimer += deltaSeconds;
@@ -120,25 +128,29 @@ export class Pet {
       this.energy = Math.max(0, this.energy - (rates.energy * deltaSeconds * 10));
     }
 
-    // Lógica de Saúde e Enfermidade
+    // Lógica de Saúde, Enfermidade e Mortalidade por Negligência
     const isCritical = this.hunger < 15 || this.hygiene < 15 || this.energy < 10;
     if (isCritical) {
-      this.health = Math.max(0, this.health - (0.02 * deltaSeconds * 10));
-      if (this.health < 30 && this.state !== PET_STATES.CRITICAL && this.state !== PET_STATES.SLEEPING) {
+      // Se fome ou higiene estiverem totalmente em 0%, a deterioração é acelerada
+      const extremeNeglect = (this.hunger <= 0 ? 2 : 1) + (this.hygiene <= 0 ? 2 : 1);
+      this.health = Math.max(0, this.health - (0.03 * deltaSeconds * 10 * extremeNeglect));
+
+      if (this.health <= 0) {
+        this.health = 0;
+        this.state = PET_STATES.DECEASED;
+      } else if (this.health <= 15) {
+        this.state = PET_STATES.CRITICAL;
+      } else if (this.health < 40 && this.state !== PET_STATES.CRITICAL && this.state !== PET_STATES.SLEEPING) {
         this.state = PET_STATES.SICK;
       }
     } else {
       // Recuperação gradual se bem cuidado
-      if (this.health < 100) {
+      if (this.health < 100 && this.state !== PET_STATES.DECEASED) {
         this.health = Math.min(100, this.health + (0.01 * deltaSeconds * 10));
       }
-      if (this.state === PET_STATES.SICK && this.health > 50) {
+      if ((this.state === PET_STATES.SICK || this.state === PET_STATES.CRITICAL) && this.health > 50) {
         this.state = PET_STATES.IDLE;
       }
-    }
-
-    if (this.health <= 5) {
-      this.state = PET_STATES.CRITICAL;
     }
 
     this.lastUpdated = Date.now();
@@ -146,7 +158,7 @@ export class Pet {
 
   // Processa o decaimento acumulado enquanto a PWA esteve fechada
   applyOfflineDecay(now = Date.now()) {
-    if (this.stage === GROWTH_STAGES.EGG) {
+    if (this.stage === GROWTH_STAGES.EGG || this.state === PET_STATES.DECEASED) {
       this.lastUpdated = now;
       return null;
     }
@@ -162,22 +174,32 @@ export class Pet {
     const hygieneLoss = rates.hygiene * cappedSeconds * 10;
     const happinessLoss = rates.happiness * cappedSeconds * 10;
 
-    this.hunger = Math.max(5, this.hunger - hungerLoss);
-    this.hygiene = Math.max(5, this.hygiene - hygieneLoss);
-    this.happiness = Math.max(5, this.happiness - happinessLoss);
+    this.hunger = Math.max(0, this.hunger - hungerLoss);
+    this.hygiene = Math.max(0, this.hygiene - hygieneLoss);
+    this.happiness = Math.max(0, this.happiness - happinessLoss);
 
     if (this.state === PET_STATES.SLEEPING) {
       this.energy = 100;
       this.state = PET_STATES.IDLE;
     } else {
       const energyLoss = rates.energy * cappedSeconds * 10;
-      this.energy = Math.max(5, this.energy - energyLoss);
+      this.energy = Math.max(0, this.energy - energyLoss);
     }
 
-    // Se passou muito tempo e os atributos zeraram, perde saúde
-    if (this.hunger <= 10 || this.hygiene <= 10) {
-      this.health = Math.max(20, this.health - 40);
-      this.state = PET_STATES.SICK;
+    // Se passou muito tempo e os atributos zeraram, perde saúde severamente
+    if (this.hunger <= 0 || this.hygiene <= 0) {
+      const hoursOffline = cappedSeconds / 3600;
+      const healthLoss = Math.min(100, 30 + (hoursOffline * 4));
+      this.health = Math.max(0, this.health - healthLoss);
+
+      if (this.health <= 0) {
+        this.health = 0;
+        this.state = PET_STATES.DECEASED;
+      } else if (this.health <= 20) {
+        this.state = PET_STATES.CRITICAL;
+      } else {
+        this.state = PET_STATES.SICK;
+      }
     }
 
     this.lastUpdated = now;
@@ -185,7 +207,8 @@ export class Pet {
     return {
       hoursAway: (cappedSeconds / 3600).toFixed(1),
       hungerLost: Math.round(hungerLoss),
-      hygieneLost: Math.round(hygieneLoss)
+      hygieneLost: Math.round(hygieneLoss),
+      isDeceased: this.state === PET_STATES.DECEASED
     };
   }
 
@@ -204,6 +227,7 @@ export class Pet {
 
   // Interação: Alimentar
   feed(foodItem) {
+    if (this.state === PET_STATES.DECEASED) return { success: false, reason: 'O animalzinho faleceu por falta de cuidados 🪦' };
     if (this.stage === GROWTH_STAGES.EGG) return { success: false, reason: 'Ovo ainda não chocou!' };
     if (this.state === PET_STATES.SLEEPING) return { success: false, reason: 'O animal está dormindo!' };
     if (this.hunger >= 100) return { success: false, reason: 'O animal já está satisfeito!' };
@@ -235,6 +259,7 @@ export class Pet {
 
   // Interação: Banho / Higienizar
   clean(careItem = null) {
+    if (this.state === PET_STATES.DECEASED) return { success: false, reason: 'O animalzinho faleceu por falta de cuidados 🪦' };
     if (this.stage === GROWTH_STAGES.EGG) return { success: false, reason: 'Ovo ainda não chocou!' };
     if (this.state === PET_STATES.SLEEPING) return { success: false, reason: 'O animal está dormindo!' };
     if (this.hygiene >= 100) return { success: false, reason: 'O animal já está bem limpinho!' };
@@ -255,6 +280,7 @@ export class Pet {
 
   // Interação: Dormir / Acordar
   toggleSleep() {
+    if (this.state === PET_STATES.DECEASED) return { success: false, reason: 'O animalzinho faleceu por falta de cuidados 🪦' };
     if (this.stage === GROWTH_STAGES.EGG) return { success: false, reason: 'Ovo ainda não chocou!' };
 
     if (this.state === PET_STATES.SLEEPING) {
@@ -270,7 +296,8 @@ export class Pet {
 
   // Interação: Curar com remédio/poção
   heal(medicine) {
-    if (this.health >= 100 && this.state !== PET_STATES.SICK) {
+    if (this.state === PET_STATES.DECEASED) return { success: false, reason: 'O animalzinho faleceu. É necessário socorro de emergência veterinária 🪦' };
+    if (this.health >= 100 && this.state !== PET_STATES.SICK && this.state !== PET_STATES.CRITICAL) {
       return { success: false, reason: 'O animal está completamente saudável!' };
     }
 
@@ -284,6 +311,7 @@ export class Pet {
 
   // Interação: Brincadeira e Minigames
   play(score = 0, coinsEarned = 0) {
+    if (this.state === PET_STATES.DECEASED) return { success: false, reason: 'O animalzinho faleceu 🪦' };
     if (this.stage === GROWTH_STAGES.EGG) return { success: false };
     if (this.state === PET_STATES.SLEEPING) return { success: false, reason: 'O animal está dormindo!' };
 
@@ -330,6 +358,20 @@ export class Pet {
     return this.stage === GROWTH_STAGES.ADULT && this.health >= 70;
   }
 
+  // Reanimação / Atendimento Veterinário de Emergência no Hospital da Fauna
+  revive(health = 35) {
+    this.health = Math.min(100, health);
+    this.hunger = 35;
+    this.hygiene = 35;
+    this.energy = 40;
+    this.happiness = 30;
+    this.state = PET_STATES.IDLE;
+    this.stateDuration = 0;
+    this.stateTimer = 0;
+    this.lastUpdated = Date.now();
+    return true;
+  }
+
   // Serialização limpa para LocalStorage e Firebase
   serialize() {
     return {
@@ -337,7 +379,9 @@ export class Pet {
       name: this.name,
       speciesId: this.speciesId,
       stage: this.stage,
-      state: this.state === PET_STATES.SLEEPING ? PET_STATES.SLEEPING : PET_STATES.IDLE,
+      state: this.state === PET_STATES.DECEASED 
+        ? PET_STATES.DECEASED 
+        : (this.state === PET_STATES.SLEEPING ? PET_STATES.SLEEPING : PET_STATES.IDLE),
       hunger: Math.round(this.hunger),
       hygiene: Math.round(this.hygiene),
       energy: Math.round(this.energy),
