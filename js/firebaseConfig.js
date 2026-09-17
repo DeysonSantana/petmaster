@@ -10,13 +10,24 @@ const STORAGE_COINS = 'PETMASTER_COINS';
 const STORAGE_INVENTORY = 'PETMASTER_INVENTORY';
 const STORAGE_USER = 'PETMASTER_USER';
 
+// Configuração padrão do Firebase para deploy no GitHub Pages (Ativação Global / Padrão QuizMaster)
+export const DEFAULT_FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCqGd42xeen1HGc4PpgBa8sH1nhOi17ylM",
+  authDomain: "quizmaster-f9388.firebaseapp.com",
+  projectId: "quizmaster-f9388",
+  storageBucket: "quizmaster-f9388.firebasestorage.app",
+  messagingSenderId: "169092133424",
+  appId: "1:169092133424:web:019d8ef6e122468864f3f5",
+  measurementId: "G-XEPBYW3SVY"
+};
+
 export class DualStorageDB {
   constructor() {
     this.firebaseApp = null;
     this.auth = null;
     this.firestore = null;
     this.isCloudEnabled = false;
-    this.customConfig = this.loadConfig();
+    this.customConfig = this.loadConfig() || DEFAULT_FIREBASE_CONFIG;
   }
 
   loadConfig() {
@@ -34,7 +45,7 @@ export class DualStorageDB {
       this.customConfig = config;
     } else {
       localStorage.removeItem(STORAGE_FIREBASE_CONFIG);
-      this.customConfig = null;
+      this.customConfig = DEFAULT_FIREBASE_CONFIG;
     }
   }
 
