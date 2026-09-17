@@ -14,6 +14,7 @@ import { MinigameManager } from './minigames.js';
 import { SanctuaryManager } from './sanctuaryManager.js';
 import { ShareManager } from './shareManager.js';
 import { Pet3DEngine } from './pet3D.js';
+import { NotificationManager } from './notificationManager.js';
 
 class PetMasterApp {
   constructor() {
@@ -26,6 +27,7 @@ class PetMasterApp {
     // Timestamp para cálculo preciso de delta-time
     this.lastFrameTime = performance.now();
     this.autoSaveTimer = 0;
+    this.notificationTimer = 0;
 
     // Cache de referências DOM para máxima eficiência
     this.dom = {};
@@ -45,6 +47,7 @@ class PetMasterApp {
     this.minigames = new MinigameManager(this);
     this.sanctuary = new SanctuaryManager(this);
     this.share = new ShareManager(this);
+    this.notifications = new NotificationManager(this);
 
     // Inicializa Motor 3D Procedural (WebGL Three.js)
     if (this.dom.pet3DViewport && typeof THREE !== 'undefined') {
@@ -164,7 +167,11 @@ class PetMasterApp {
       headerSoundIcon: document.getElementById('header-sound-icon'),
       drawerThemeBtn: document.getElementById('drawer-theme-btn'),
       drawerThemeName: document.getElementById('drawer-theme-name'),
-      drawerInstallBtn: document.getElementById('drawer-install-btn')
+      drawerInstallBtn: document.getElementById('drawer-install-btn'),
+      drawerNotifBtn: document.getElementById('drawer-notif-btn'),
+      drawerNotifStatus: document.getElementById('drawer-notif-status'),
+      settingsNotifBtn: document.getElementById('settings-notif-btn'),
+      settingsNotifStatus: document.getElementById('settings-notif-status')
     };
   }
 
@@ -271,6 +278,15 @@ class PetMasterApp {
       if (this.autoSaveTimer >= 10) {
         this.autoSaveTimer = 0;
         this.saveGame();
+      }
+
+      // Verificação de Alertas e Notificações no Celular/Desktop a cada 5 segundos
+      this.notificationTimer += clampedDelta;
+      if (this.notificationTimer >= 5) {
+        this.notificationTimer = 0;
+        if (this.notifications && this.pet) {
+          this.notifications.checkPetReactions(this.pet);
+        }
       }
 
       requestAnimationFrame(loop);

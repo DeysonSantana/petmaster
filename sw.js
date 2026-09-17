@@ -3,7 +3,7 @@
  * Estratégia: Cache-First com Network Fallback e Stale-While-Revalidate
  */
 
-const CACHE_NAME = 'petmaster-cache-v1';
+const CACHE_NAME = 'petmaster-cache-v2';
 
 const STATIC_ASSETS = [
   './',
@@ -27,7 +27,8 @@ const STATIC_ASSETS = [
   './js/qrcodeEngine.js',
   './js/offlineManager.js',
   './js/pet3D.js',
-  './js/three.min.js'
+  './js/three.min.js',
+  './js/notificationManager.js'
 ];
 
 // Instalação: Pré-cache dos ativos estáticos fundamentais
@@ -104,6 +105,27 @@ self.addEventListener('fetch', (event) => {
           return caches.match('./index.html');
         }
       });
+    })
+  );
+});
+
+// Evento: Clique na Notificação Push / Local
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const targetUrl = (event.notification.data && event.notification.data.url) || './index.html';
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // Se já houver janela aberta, foca nela
+      for (const client of clientList) {
+        if (client.url.includes('index.html') && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      // Se não houver, abre nova janela
+      if (clients.openWindow) {
+        return clients.openWindow(targetUrl);
+      }
     })
   );
 });

@@ -291,6 +291,17 @@
             Ligado
           </button>
         </div>
+
+        <!-- Notificações Push / Reações no Drawer -->
+        <div class="flex items-center justify-between p-2.5 rounded-xl bg-gray-900/60 border border-gray-800">
+          <div class="flex items-center gap-2">
+            <i data-lucide="bell" class="w-4 h-4 text-amber-400"></i>
+            <span class="text-xs text-gray-300 font-medium">Notificações</span>
+          </div>
+          <button id="drawer-notif-btn" class="px-2.5 py-1 rounded-lg bg-amber-600/30 text-amber-300 text-xs font-bold hover:bg-amber-600 hover:text-white transition-colors">
+            <span id="drawer-notif-status">Ativar</span>
+          </button>
+        </div>
         <p class="text-[10px] text-gray-500 text-center font-mono">PetMaster v1.0.0 • Offline &amp; GitHub Pages</p>
       </div>
     </aside>
@@ -779,6 +790,19 @@
         </div>
         <button id="mute-toggle-btn" class="p-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-base">
           <span id="mute-icon">🔊</span>
+        </button>
+      </div>
+
+      <!-- Notificações do Dispositivo / PWA -->
+      <div class="p-3 rounded-2xl bg-gray-900/80 border border-gray-800 flex items-center justify-between">
+        <div>
+          <h5 class="text-xs font-bold text-white flex items-center gap-1.5">
+            <i data-lucide="bell" class="w-4 h-4 text-amber-400"></i> Notificações do Pet
+          </h5>
+          <p class="text-[10px] text-gray-400">Alertas de fome, higiene, sono e evolução no celular</p>
+        </div>
+        <button id="settings-notif-btn" class="px-3 py-1.5 rounded-xl bg-amber-600/30 border border-amber-500/40 text-amber-300 font-bold text-xs hover:bg-amber-600 hover:text-white transition-colors">
+          <span id="settings-notif-status">Ativar Alertas</span>
         </button>
       </div>
 
