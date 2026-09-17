@@ -28,6 +28,8 @@ class PetMasterApp {
     this.lastFrameTime = performance.now();
     this.autoSaveTimer = 0;
     this.notificationTimer = 0;
+    this.weatherTimer = 0;
+    this.hasInitialWeather = false;
 
     // Cache de referências DOM para máxima eficiência
     this.dom = {};
@@ -171,7 +173,24 @@ class PetMasterApp {
       drawerNotifBtn: document.getElementById('drawer-notif-btn'),
       drawerNotifStatus: document.getElementById('drawer-notif-status'),
       settingsNotifBtn: document.getElementById('settings-notif-btn'),
-      settingsNotifStatus: document.getElementById('settings-notif-status')
+      settingsNotifStatus: document.getElementById('settings-notif-status'),
+
+      // Renomeação do Pet
+      renamePetBtn: document.getElementById('rename-pet-btn'),
+      renamePetModal: document.getElementById('rename-pet-modal'),
+      closeRenameModalBtn: document.getElementById('close-rename-modal-btn'),
+      petRenameInput: document.getElementById('pet-rename-input'),
+      cancelRenameBtn: document.getElementById('cancel-rename-btn'),
+      saveRenameBtn: document.getElementById('save-rename-btn'),
+
+      // Período do Dia e Clima
+      weatherPeriodBadge: document.getElementById('weather-period-badge'),
+      weatherIcon: document.getElementById('weather-icon'),
+      weatherText: document.getElementById('weather-text'),
+      weatherTime: document.getElementById('weather-time'),
+      habitatBiomeBadge: document.getElementById('habitat-biome-badge'),
+      habitatBiomeIcon: document.getElementById('habitat-biome-icon'),
+      habitatBiomeName: document.getElementById('habitat-biome-name')
     };
   }
 
@@ -289,6 +308,14 @@ class PetMasterApp {
         }
       }
 
+      // Atualização de Clima & Período do Dia a cada 10 segundos
+      this.weatherTimer += clampedDelta;
+      if (this.weatherTimer >= 10 || !this.hasInitialWeather) {
+        this.weatherTimer = 0;
+        this.hasInitialWeather = true;
+        this.updateTimeAndWeatherCycle();
+      }
+
       requestAnimationFrame(loop);
     };
 
@@ -304,6 +331,108 @@ class PetMasterApp {
     }
     if (this.dom.petSpeciesDisplay) {
       this.dom.petSpeciesDisplay.textContent = `${sp.emoji} ${sp.name} (${sp.scientificName})`;
+    }
+    if (this.dom.habitatBiomeName && sp.biomeName) {
+      this.dom.habitatBiomeName.textContent = sp.biomeName;
+    }
+  }
+
+  // ==========================================
+  // CICLO HORÁRIO & CLIMA DINÂMICO
+  // ==========================================
+  updateTimeAndWeatherCycle() {
+    const now = new Date();
+    const hour = now.getHours();
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const timeStr = `${String(hour).padStart(2, '0')}:${minutes}`;
+
+    let period = 'day';
+    let icon = '☀️';
+    let text = 'Dia • Céu Limpo';
+    let bgGradient = '';
+
+    if (hour >= 0 && hour < 6) {
+      period = 'midnight';
+      icon = '🌌';
+      text = 'Madrugada • Céu Estrelado';
+      bgGradient = 'radial-gradient(ellipse at top, #020617 0%, #090d16 60%, #04130d 100%)';
+    } else if (hour >= 6 && hour < 9) {
+      period = 'dawn';
+      icon = '🌅';
+      text = 'Alvorecer • Sol Nascente';
+      bgGradient = 'radial-gradient(ellipse at top, #2e1065 0%, #701a75 50%, #062016 100%)';
+    } else if (hour >= 9 && hour < 17) {
+      period = 'day';
+      icon = '☀️';
+      text = 'Dia Pleno • Céu Claro';
+      bgGradient = 'radial-gradient(ellipse at top, #064e3b 0%, #062016 70%, #021a10 100%)';
+    } else if (hour >= 17 && hour < 19) {
+      period = 'sunset';
+      icon = '🌇';
+      text = 'Entardecer • Pôr do Sol';
+      bgGradient = 'radial-gradient(ellipse at top, #7c2d12 0%, #831843 50%, #062016 100%)';
+    } else {
+      period = 'night';
+      icon = '🌙';
+      text = 'Noite • Brisa Serena';
+      bgGradient = 'radial-gradient(ellipse at top, #0f172a 0%, #1e1b4b 60%, #062016 100%)';
+    }
+
+    if (this.dom.weatherIcon) this.dom.weatherIcon.textContent = icon;
+    if (this.dom.weatherText) this.dom.weatherText.textContent = text;
+    if (this.dom.weatherTime) this.dom.weatherTime.textContent = timeStr;
+
+    if (this.dom.habitatRoom && bgGradient) {
+      this.dom.habitatRoom.style.background = bgGradient;
+    }
+
+    if (this.dom.habitatBiomeName && this.pet && this.pet.species) {
+      this.dom.habitatBiomeName.textContent = this.pet.species.biomeName || 'Santuário Natural';
+    }
+
+    if (this.pet3D) {
+      this.pet3D.updateTimeAndWeather(period, 'clear');
+    }
+  }
+
+  // ==========================================
+  // MODAL DE RENOMEAÇÃO DO ANIMAL
+  // ==========================================
+  openRenameModal() {
+    if (!this.dom.renamePetModal) return;
+    if (this.dom.petRenameInput && this.pet) {
+      this.dom.petRenameInput.value = this.pet.name || '';
+    }
+    this.dom.renamePetModal.classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
+    if (this.dom.petRenameInput) this.dom.petRenameInput.focus();
+    soundFx.playClick();
+  }
+
+  closeRenameModal() {
+    if (!this.dom.renamePetModal) return;
+    this.dom.renamePetModal.classList.add('hidden');
+    document.body.classList.remove('overflow-hidden');
+    soundFx.playClick();
+  }
+
+  savePetName() {
+    if (!this.dom.petRenameInput || !this.pet) return;
+    const newName = this.dom.petRenameInput.value.trim();
+    if (!newName) {
+      this.showToast('Por favor, digite um nome válido.', 'warning');
+      return;
+    }
+
+    this.pet.name = newName;
+    this.saveGame();
+    this.updateStaticPetInfo();
+    this.closeRenameModal();
+    soundFx.playLevelUp();
+    this.showToast(`🐾 Nome atualizado para "${newName}"!`, 'success');
+
+    if (this.pet3D) {
+      this.pet3D.playGesture('happy');
     }
   }
 
@@ -435,6 +564,7 @@ class PetMasterApp {
     // Interação de Carinho / Toque direto no Pet
     if (this.dom.petAvatar) {
       this.dom.petAvatar.addEventListener('click', () => {
+        if (this.pet3D) this.pet3D.triggerAffectionGesture();
         if (this.pet.stage === GROWTH_STAGES.EGG) {
           const hatched = this.pet.warmEgg();
           if (hatched) {
@@ -454,6 +584,17 @@ class PetMasterApp {
       });
     }
 
+    // Renomeação do Pet
+    if (this.dom.renamePetBtn) this.dom.renamePetBtn.addEventListener('click', () => this.openRenameModal());
+    if (this.dom.closeRenameModalBtn) this.dom.closeRenameModalBtn.addEventListener('click', () => this.closeRenameModal());
+    if (this.dom.cancelRenameBtn) this.dom.cancelRenameBtn.addEventListener('click', () => this.closeRenameModal());
+    if (this.dom.saveRenameBtn) this.dom.saveRenameBtn.addEventListener('click', () => this.savePetName());
+    if (this.dom.petRenameInput) {
+      this.dom.petRenameInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') this.savePetName();
+      });
+    }
+
     // Dock: Alimentar
     if (this.dom.dockFeedBtn) {
       this.dom.dockFeedBtn.addEventListener('click', () => this.openFoodModal());
@@ -468,6 +609,7 @@ class PetMasterApp {
             this.inventory.soap--;
             this.saveGame();
             soundFx.playBath();
+            if (this.pet3D) this.pet3D.playGesture('bathing');
             this.spawnFloatingEffect('🫧');
             this.showToast('🧼 Banho tomado! O pet está perfumado e limpo.', 'success');
             if (res.evolved) this.handleEvolution(res.evolved);
@@ -488,9 +630,11 @@ class PetMasterApp {
         if (res.success) {
           if (res.sleeping) {
             soundFx.playSleep();
+            if (this.pet3D) this.pet3D.playGesture('sleeping');
             this.showToast('💤 Shhh... O pet foi dormir e está recuperando energia.', 'info');
           } else {
             soundFx.playClick();
+            if (this.pet3D) this.pet3D.playGesture('happy');
             this.showToast('☀️ Bom dia! O animalzinho acordou com as energias renovadas.', 'success');
           }
         } else {
@@ -788,6 +932,7 @@ class PetMasterApp {
             this.inventory[food.id]--;
             this.saveGame();
             soundFx.playFeed();
+            if (this.pet3D) this.pet3D.playGesture('eating');
             this.spawnFloatingEffect(food.icon);
             this.showToast(`🍎 ${this.pet.name} comeu ${food.name}! (+${res.hungerGain}% fome, +${res.xpGain} XP)`, 'success');
             this.closeFoodModal();

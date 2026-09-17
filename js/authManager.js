@@ -40,6 +40,33 @@ export class AuthManager {
     this.updateUserUI();
     this.bindEvents();
     this.renderAvatarOptions();
+    this.checkAutoLogin();
+  }
+
+  // Verificação de Login com Google Automático na Inicialização
+  async checkAutoLogin() {
+    if (db.isCloudEnabled && db.auth) {
+      try {
+        const { onAuthStateChanged } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js');
+        onAuthStateChanged(db.auth, (user) => {
+          if (user) {
+            console.log('⚡ [AuthManager] Sessão Google autenticada automaticamente:', user.displayName);
+            this.currentUser = {
+              uid: user.uid,
+              displayName: user.displayName || 'Guardião Google',
+              email: user.email,
+              avatar: this.currentUser.avatar || '🦁',
+              isAnonymous: false
+            };
+            db.saveUser(this.currentUser);
+            this.updateUserUI();
+            this.app.showToast(`✨ Sessão Google ativa: ${this.currentUser.displayName}`, 'info');
+          }
+        });
+      } catch (e) {
+        console.warn('Falha no auto-login do Firebase Auth:', e);
+      }
+    }
   }
 
   bindEvents() {

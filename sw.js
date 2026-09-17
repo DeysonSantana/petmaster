@@ -3,7 +3,7 @@
  * Estratégia: Cache-First com Network Fallback e Stale-While-Revalidate
  */
 
-const CACHE_NAME = 'petmaster-cache-v2';
+const CACHE_NAME = 'petmaster-cache-v3';
 
 const STATIC_ASSETS = [
   './',

@@ -318,6 +318,9 @@
         <div class="flex flex-col">
           <div class="flex items-center gap-2">
             <h2 id="pet-name-display" class="font-display text-xl sm:text-2xl font-black text-white">Pipoca</h2>
+            <button id="rename-pet-btn" class="p-1.5 rounded-xl bg-gray-900/80 hover:bg-gray-800 border border-gray-700/60 text-emerald-400 hover:text-emerald-300 transition-all" title="Renomear seu animal">
+              <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+            </button>
             <span id="pet-stage-badge" class="px-2.5 py-0.5 rounded-full bg-emerald-950 border border-emerald-500/60 text-emerald-300 text-[11px] font-bold">
               🥚 Ovo
             </span>
@@ -416,6 +419,19 @@
          ========================================== -->
     <section id="habitat-room" class="glass-card rounded-3xl p-6 relative flex-1 flex flex-col items-center justify-center min-h-[340px] overflow-hidden habitat-view">
       
+      <!-- Badge de Período do Dia & Clima da Fauna -->
+      <div class="absolute top-4 left-4 z-20 flex items-center gap-2">
+        <div id="weather-period-badge" class="px-2.5 py-1 rounded-xl bg-gray-950/75 border border-emerald-500/30 backdrop-blur-md flex items-center gap-1.5 text-[11px] font-bold text-gray-200 shadow-md">
+          <span id="weather-icon">☀️</span>
+          <span id="weather-text">Dia • Céu Limpo</span>
+          <span id="weather-time" class="text-[10px] text-emerald-400 font-mono pl-1 border-l border-gray-700">10:00</span>
+        </div>
+        <div id="habitat-biome-badge" class="hidden sm:flex px-2 py-1 rounded-xl bg-gray-950/75 border border-gray-800 backdrop-blur-md items-center gap-1 text-[10px] font-semibold text-emerald-300 shadow-md">
+          <span id="habitat-biome-icon">🌴</span>
+          <span id="habitat-biome-name">Pantanal &amp; Várzeas</span>
+        </div>
+      </div>
+      
       <!-- Overlay Noturno durante o Sono -->
       <div id="night-overlay" class="hidden absolute inset-0 bg-slate-950/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center pointer-events-none transition-all">
         <span class="text-4xl animate-bounce">🌙</span>
@@ -497,6 +513,31 @@
        5. MODAIS DA SPA
        ========================================== -->
 
+  <!-- MODAL: RENOMEAR PET -->
+  <div id="rename-pet-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="glass-card rounded-3xl max-w-sm w-full p-5 flex flex-col gap-4 border border-emerald-500/40">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">✏️</span>
+          <h3 class="font-display text-lg font-bold text-white">Nomear seu Animal</h3>
+        </div>
+        <button id="close-rename-modal-btn" class="p-2 rounded-xl bg-gray-800 text-gray-400 hover:text-white">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <p class="text-xs text-gray-300">Escolha um nome especial e carinhoso para o seu companheiro da fauna:</p>
+      <input id="pet-rename-input" type="text" maxlength="18" placeholder="Ex: Pipoca, Tufão, Cristal..." class="w-full px-4 py-3 rounded-2xl bg-gray-900 border border-gray-700 text-white font-bold text-sm focus:border-emerald-500 outline-none" />
+      <div class="flex gap-2">
+        <button id="cancel-rename-btn" class="flex-1 py-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-xs font-bold text-gray-300 transition-colors">
+          Cancelar
+        </button>
+        <button id="save-rename-btn" class="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white shadow-md transition-colors">
+          Salvar Nome
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL: ALIMENTAR (SELETOR DE COMIDA) -->
   <div id="food-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="glass-card rounded-3xl max-w-md w-full p-5 flex flex-col gap-4 border border-orange-500/30">
@@ -533,24 +574,30 @@
 
   <!-- MODAL: MINIGAMES -->
   <div id="minigames-modal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
-    <div class="glass-card rounded-3xl max-w-md w-full p-5 flex flex-col gap-4 border border-pink-500/30">
+    <div class="glass-card rounded-3xl max-w-lg w-full p-5 flex flex-col gap-4 border border-pink-500/30">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">
           <span class="text-2xl">🎮</span>
-          <h3 class="font-display text-lg font-bold text-white">Centro de Minigames</h3>
+          <h3 class="font-display text-lg font-bold text-white">Centro de Minigames (4 Jogos)</h3>
         </div>
         <button id="close-minigames-modal-btn" class="p-2 rounded-xl bg-gray-800 text-gray-400 hover:text-white">
           <i data-lucide="x" class="w-4 h-4"></i>
         </button>
       </div>
 
-      <!-- Abas dos Minigames -->
-      <div class="flex gap-2 p-1 rounded-2xl bg-gray-900 border border-gray-800">
-        <button id="tab-chuva-btn" class="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 text-white shadow-md flex-1">
-          🌧️ Chuva de Alimentos
+      <!-- 4 Abas dos Minigames -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 p-1 rounded-2xl bg-gray-900 border border-gray-800 text-[11px]">
+        <button id="tab-chuva-btn" class="py-2 px-1.5 rounded-xl font-bold bg-emerald-600 text-white shadow-md transition-all text-center">
+          🌧️ Chuva
         </button>
-        <button id="tab-memoria-btn" class="px-4 py-2 rounded-xl text-xs font-bold text-gray-400 hover:text-white flex-1">
-          🧠 Memória da Fauna
+        <button id="tab-memoria-btn" class="py-2 px-1.5 rounded-xl font-bold text-gray-400 hover:text-white transition-all text-center">
+          🧠 Memória
+        </button>
+        <button id="tab-salto-btn" class="py-2 px-1.5 rounded-xl font-bold text-gray-400 hover:text-white transition-all text-center">
+          🏃 Salto
+        </button>
+        <button id="tab-ritmo-btn" class="py-2 px-1.5 rounded-xl font-bold text-gray-400 hover:text-white transition-all text-center">
+          🎵 Ritmo
         </button>
       </div>
 
@@ -561,11 +608,11 @@
           <div id="chuva-lives" class="text-red-400 text-sm">❤️❤️❤️</div>
         </div>
 
-        <div class="relative w-full aspect-[360/460] rounded-2xl overflow-hidden border border-emerald-500/30 bg-gray-950 flex items-center justify-center shadow-inner">
+        <div class="relative w-full aspect-[360/400] rounded-2xl overflow-hidden border border-emerald-500/30 bg-gray-950 flex items-center justify-center shadow-inner">
           <canvas id="chuva-canvas" class="w-full h-full block cursor-pointer"></canvas>
           <div id="chuva-overlay" class="absolute inset-0 flex items-center justify-center bg-black/70 p-4">
             <button id="start-chuva-btn" class="px-6 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 font-bold text-white shadow-lg shadow-emerald-600/40 text-sm animate-pulse">
-              ▶️ Iniciar Partida
+              ▶️ Iniciar Chuva
             </button>
           </div>
         </div>
@@ -578,10 +625,62 @@
           <div>Movimentos: <span id="memoria-moves" class="text-white">0</span></div>
           <div>Pares: <span id="memoria-matches" class="text-emerald-400">0/6</span></div>
         </div>
-        <div id="memoria-grid" class="grid grid-cols-4 gap-2.5 w-full aspect-square"></div>
+        <div id="memoria-grid" class="grid grid-cols-4 gap-2 w-full aspect-square"></div>
         <button id="start-memoria-btn" class="px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-xs font-bold text-gray-200">
           Embaralhar Cartas
         </button>
+      </div>
+
+      <!-- View 3: Salto Ecológico (Biome Runner) -->
+      <div id="minigame-salto-view" class="hidden flex flex-col items-center gap-3">
+        <div class="w-full flex justify-between items-center text-xs font-bold px-2">
+          <div class="text-amber-400">Moedas: <span id="salto-score">0</span> 🪙</div>
+          <div class="text-indigo-400">Distância: <span id="salto-distance">0</span>m</div>
+        </div>
+
+        <div class="relative w-full aspect-[360/320] rounded-2xl overflow-hidden border border-indigo-500/30 bg-gray-950 flex items-center justify-center shadow-inner">
+          <canvas id="salto-canvas" class="w-full h-full block cursor-pointer"></canvas>
+          <div id="salto-overlay" class="absolute inset-0 flex flex-col items-center justify-center bg-black/75 p-4 gap-2">
+            <span class="text-3xl animate-bounce">🏃🐾</span>
+            <button id="start-salto-btn" class="px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 font-bold text-white shadow-lg shadow-indigo-600/40 text-sm">
+              ▶️ Iniciar Corrida
+            </button>
+          </div>
+        </div>
+        <p class="text-[10px] text-gray-400 text-center">Toque na tela ou aperte [Espaço] para pular sobre troncos e resíduos plásticos!</p>
+      </div>
+
+      <!-- View 4: Ritmo da Natureza (Simon Says Web Audio) -->
+      <div id="minigame-ritmo-view" class="hidden flex flex-col items-center gap-3">
+        <div class="w-full flex justify-between items-center text-xs font-bold px-2">
+          <div class="text-pink-400">Rodada: <span id="ritmo-round">1</span></div>
+          <div id="ritmo-status" class="text-emerald-400 font-semibold">Aperte Iniciar</div>
+        </div>
+
+        <!-- Grid 2x2 com os 4 Elementos -->
+        <div class="grid grid-cols-2 gap-3 w-full max-w-[280px] aspect-square p-2 bg-gray-950/80 rounded-3xl border border-gray-800">
+          <button id="ritmo-pad-water" data-pad="0" class="ritmo-pad rounded-2xl bg-cyan-600/30 border-2 border-cyan-500/40 hover:bg-cyan-500/50 flex flex-col items-center justify-center gap-1 transition-all active:scale-95 text-cyan-300 font-bold text-xs p-3">
+            <span class="text-2xl">💧</span>
+            <span>Água</span>
+          </button>
+          <button id="ritmo-pad-leaf" data-pad="1" class="ritmo-pad rounded-2xl bg-emerald-600/30 border-2 border-emerald-500/40 hover:bg-emerald-500/50 flex flex-col items-center justify-center gap-1 transition-all active:scale-95 text-emerald-300 font-bold text-xs p-3">
+            <span class="text-2xl">🌿</span>
+            <span>Mata</span>
+          </button>
+          <button id="ritmo-pad-sun" data-pad="2" class="ritmo-pad rounded-2xl bg-amber-600/30 border-2 border-amber-500/40 hover:bg-amber-500/50 flex flex-col items-center justify-center gap-1 transition-all active:scale-95 text-amber-300 font-bold text-xs p-3">
+            <span class="text-2xl">☀️</span>
+            <span>Sol</span>
+          </button>
+          <button id="ritmo-pad-earth" data-pad="3" class="ritmo-pad rounded-2xl bg-orange-700/30 border-2 border-orange-500/40 hover:bg-orange-500/50 flex flex-col items-center justify-center gap-1 transition-all active:scale-95 text-orange-300 font-bold text-xs p-3">
+            <span class="text-2xl">🪨</span>
+            <span>Terra</span>
+          </button>
+        </div>
+
+        <button id="start-ritmo-btn" class="px-6 py-2.5 rounded-2xl bg-pink-600 hover:bg-pink-500 font-bold text-white shadow-md text-xs transition-colors">
+          ▶️ Iniciar Sequência
+        </button>
+        <p class="text-[10px] text-gray-400 text-center">Memorize a melodia dos elementos e repita a sequência corretamente!</p>
       </div>
     </div>
   </div>

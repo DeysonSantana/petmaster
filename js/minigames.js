@@ -1,7 +1,9 @@
 /**
- * PetMaster - Minigames Interativos
- * 1. Chuva de Alimentos (Canvas 2D com requestAnimationFrame e colisões AABB)
- * 2. Memória da Biodiversidade (Grid interativa de cartas e fatos biológicos)
+ * PetMaster - Centro de Minigames Interativos
+ * 1. Chuva de Alimentos (Canvas 2D - Catching)
+ * 2. Memória da Fauna (Grid de Cartas Biológicas)
+ * 3. Salto Ecológico (Canvas 2D - Biome Runner & Pulo com Física)
+ * 4. Ritmo da Natureza (Simon Says Musical com Web Audio API)
  */
 
 import { soundFx } from './audio.js';
@@ -9,17 +11,32 @@ import { soundFx } from './audio.js';
 export class MinigameManager {
   constructor(app) {
     this.app = app;
-    this.currentGame = null;
+    this.currentTab = 'chuva';
     this.animationFrameId = null;
+    this.saltoFrameId = null;
+
+    // Estado do Ritmo da Natureza
+    this.ritmoSequence = [];
+    this.playerSequence = [];
+    this.ritmoRound = 1;
+    this.isShowingSequence = false;
 
     this.dom = {
       minigamesModal: document.getElementById('minigames-modal'),
       closeMinigamesModalBtn: document.getElementById('close-minigames-modal-btn'),
+
+      // Abas
       tabChuvaBtn: document.getElementById('tab-chuva-btn'),
       tabMemoriaBtn: document.getElementById('tab-memoria-btn'),
+      tabSaltoBtn: document.getElementById('tab-salto-btn'),
+      tabRitmoBtn: document.getElementById('tab-ritmo-btn'),
+
+      // Containers
       chuvaContainer: document.getElementById('minigame-chuva-view'),
       memoriaContainer: document.getElementById('minigame-memoria-view'),
-      
+      saltoContainer: document.getElementById('minigame-salto-view'),
+      ritmoContainer: document.getElementById('minigame-ritmo-view'),
+
       // Canvas Chuva de Alimentos
       canvas: document.getElementById('chuva-canvas'),
       startChuvaBtn: document.getElementById('start-chuva-btn'),
@@ -31,7 +48,25 @@ export class MinigameManager {
       startMemoriaBtn: document.getElementById('start-memoria-btn'),
       memoriaGrid: document.getElementById('memoria-grid'),
       memoriaMovesDisplay: document.getElementById('memoria-moves'),
-      memoriaMatchesDisplay: document.getElementById('memoria-matches')
+      memoriaMatchesDisplay: document.getElementById('memoria-matches'),
+
+      // Salto Ecológico
+      saltoCanvas: document.getElementById('salto-canvas'),
+      startSaltoBtn: document.getElementById('start-salto-btn'),
+      saltoScoreDisplay: document.getElementById('salto-score'),
+      saltoDistanceDisplay: document.getElementById('salto-distance'),
+      saltoOverlay: document.getElementById('salto-overlay'),
+
+      // Ritmo da Natureza
+      startRitmoBtn: document.getElementById('start-ritmo-btn'),
+      ritmoRoundDisplay: document.getElementById('ritmo-round'),
+      ritmoStatusDisplay: document.getElementById('ritmo-status'),
+      ritmoPads: [
+        document.getElementById('ritmo-pad-water'),
+        document.getElementById('ritmo-pad-leaf'),
+        document.getElementById('ritmo-pad-sun'),
+        document.getElementById('ritmo-pad-earth')
+      ]
     };
 
     this.init();
@@ -55,6 +90,15 @@ export class MinigameManager {
       this.dom.tabMemoriaBtn.addEventListener('click', () => this.switchTab('memoria'));
     }
 
+    if (this.dom.tabSaltoBtn) {
+      this.dom.tabSaltoBtn.addEventListener('click', () => this.switchTab('salto'));
+    }
+
+    if (this.dom.tabRitmoBtn) {
+      this.dom.tabRitmoBtn.addEventListener('click', () => this.switchTab('ritmo'));
+    }
+
+    // Gatilhos de Início
     if (this.dom.startChuvaBtn) {
       this.dom.startChuvaBtn.addEventListener('click', () => this.startChuvaGame());
     }
@@ -62,6 +106,21 @@ export class MinigameManager {
     if (this.dom.startMemoriaBtn) {
       this.dom.startMemoriaBtn.addEventListener('click', () => this.startMemoriaGame());
     }
+
+    if (this.dom.startSaltoBtn) {
+      this.dom.startSaltoBtn.addEventListener('click', () => this.startSaltoGame());
+    }
+
+    if (this.dom.startRitmoBtn) {
+      this.dom.startRitmoBtn.addEventListener('click', () => this.startRitmoGame());
+    }
+
+    // Pads do Ritmo
+    this.dom.ritmoPads.forEach((pad, index) => {
+      if (pad) {
+        pad.addEventListener('click', () => this.handlePadPress(index));
+      }
+    });
   }
 
   openModal() {
@@ -73,6 +132,7 @@ export class MinigameManager {
 
   closeModal() {
     this.stopChuvaGame();
+    this.stopSaltoGame();
     if (this.dom.minigamesModal) {
       this.dom.minigamesModal.classList.add('hidden');
       document.body.classList.remove('overflow-hidden');
@@ -81,25 +141,40 @@ export class MinigameManager {
   }
 
   switchTab(tab) {
-    if (tab === 'chuva') {
-      if (this.dom.tabChuvaBtn) {
-        this.dom.tabChuvaBtn.className = 'px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 text-white shadow-md transition-all';
+    this.stopChuvaGame();
+    this.stopSaltoGame();
+    this.currentTab = tab;
+
+    const tabs = ['chuva', 'memoria', 'salto', 'ritmo'];
+    const tabBtns = {
+      chuva: this.dom.tabChuvaBtn,
+      memoria: this.dom.tabMemoriaBtn,
+      salto: this.dom.tabSaltoBtn,
+      ritmo: this.dom.tabRitmoBtn
+    };
+    const containers = {
+      chuva: this.dom.chuvaContainer,
+      memoria: this.dom.memoriaContainer,
+      salto: this.dom.saltoContainer,
+      ritmo: this.dom.ritmoContainer
+    };
+
+    tabs.forEach((t) => {
+      if (tabBtns[t]) {
+        tabBtns[t].className = t === tab
+          ? 'py-2 px-1.5 rounded-xl font-bold bg-emerald-600 text-white shadow-md transition-all text-center'
+          : 'py-2 px-1.5 rounded-xl font-bold text-gray-400 hover:text-white transition-all text-center';
       }
-      if (this.dom.tabMemoriaBtn) {
-        this.dom.tabMemoriaBtn.className = 'px-4 py-2 rounded-xl text-xs font-bold text-gray-400 hover:text-white transition-all';
+      if (containers[t]) {
+        if (t === tab) {
+          containers[t].classList.remove('hidden');
+        } else {
+          containers[t].classList.add('hidden');
+        }
       }
-      if (this.dom.chuvaContainer) this.dom.chuvaContainer.classList.remove('hidden');
-      if (this.dom.memoriaContainer) this.dom.memoriaContainer.classList.add('hidden');
-    } else {
-      this.stopChuvaGame();
-      if (this.dom.tabMemoriaBtn) {
-        this.dom.tabMemoriaBtn.className = 'px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 text-white shadow-md transition-all';
-      }
-      if (this.dom.tabChuvaBtn) {
-        this.dom.tabChuvaBtn.className = 'px-4 py-2 rounded-xl text-xs font-bold text-gray-400 hover:text-white transition-all';
-      }
-      if (this.dom.memoriaContainer) this.dom.memoriaContainer.classList.remove('hidden');
-      if (this.dom.chuvaContainer) this.dom.chuvaContainer.classList.add('hidden');
+    });
+
+    if (tab === 'memoria') {
       this.startMemoriaGame();
     }
     soundFx.playClick();
@@ -113,248 +188,166 @@ export class MinigameManager {
     const canvas = this.dom.canvas;
     const ctx = canvas.getContext('2d');
 
-    // Configura resolução interna
     canvas.width = 360;
-    canvas.height = 460;
+    canvas.height = 420;
 
     if (this.dom.chuvaOverlay) {
       this.dom.chuvaOverlay.classList.add('hidden');
     }
 
-    const petEmoji = this.app.pet ? this.app.pet.species.emoji : '🐾';
+    let score = 0;
+    let lives = 3;
+    let basketX = canvas.width / 2;
+    const basketWidth = 72;
+    const basketHeight = 18;
+    const items = [];
+    let spawnTimer = 0;
+    let isGameOver = false;
 
-    const state = {
-      playerX: 180,
-      playerWidth: 50,
-      playerHeight: 40,
-      score: 0,
-      lives: 3,
-      items: [],
-      spawnTimer: 0,
-      spawnInterval: 45, // frames entre spawns
-      running: true,
-      touchActive: false
-    };
+    this.updateChuvaHUD(score, lives);
 
-    this.gameStateChuva = state;
-    this.updateChuvaHUD(state.score, state.lives);
-
-    // Controles Touch e Mouse
-    const handleMove = (clientX) => {
+    const onPointerMove = (e) => {
       const rect = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / rect.width;
-      const x = (clientX - rect.left) * scaleX;
-      state.playerX = Math.max(state.playerWidth / 2, Math.min(canvas.width - state.playerWidth / 2, x));
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      basketX = ((clientX - rect.left) / rect.width) * canvas.width;
+      basketX = Math.max(basketWidth / 2, Math.min(canvas.width - basketWidth / 2, basketX));
     };
 
-    const onTouchMove = (e) => {
-      if (e.touches && e.touches[0]) {
-        handleMove(e.touches[0].clientX);
-      }
-    };
-    const onMouseMove = (e) => handleMove(e.clientX);
+    canvas.onmousemove = onPointerMove;
+    canvas.ontouchmove = onPointerMove;
 
-    canvas.onpointermove = onMouseMove;
-    canvas.ontouchmove = onTouchMove;
+    const gameLoop = () => {
+      if (isGameOver) return;
 
-    // Itens possíveis
-    const goodTypes = [
-      { emoji: '🫐', pts: 10, isGood: true },
-      { emoji: '🌿', pts: 10, isGood: true },
-      { emoji: '🦗', pts: 15, isGood: true },
-      { emoji: '🐟', pts: 20, isGood: true },
-      { emoji: '✨', pts: 50, isGood: true }
-    ];
-    const badTypes = [
-      { emoji: '🪨', isGood: false },
-      { emoji: '🥫', isGood: false },
-      { emoji: '☣️', isGood: false }
-    ];
-
-    let lastTime = performance.now();
-
-    const loop = (currentTime) => {
-      if (!state.running) return;
-
-      const dt = (currentTime - lastTime) / 1000;
-      lastTime = currentTime;
-
-      // Limpa Canvas
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Fundo estilizado com gradiente de céu
-      const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-      grad.addColorStop(0, '#062016');
-      grad.addColorStop(1, '#020d09');
-      ctx.fillStyle = grad;
+      // Fundo suave da clareira
+      ctx.fillStyle = '#062016';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Linha de chão
-      ctx.strokeStyle = '#10b98133';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(0, canvas.height - 20);
-      ctx.lineTo(canvas.width, canvas.height - 20);
-      ctx.stroke();
-
-      // Spawner de itens
-      state.spawnTimer++;
-      if (state.spawnTimer >= state.spawnInterval) {
-        state.spawnTimer = 0;
-        const isBad = Math.random() < 0.28; // 28% de lixo/pedra
-        const pool = isBad ? badTypes : goodTypes;
-        const chosen = pool[Math.floor(Math.random() * pool.length)];
-
-        state.items.push({
+      // Gera novos itens que caem
+      spawnTimer++;
+      if (spawnTimer >= 35) {
+        spawnTimer = 0;
+        const isBad = Math.random() < 0.25;
+        items.push({
           x: 25 + Math.random() * (canvas.width - 50),
           y: -20,
-          speed: 2.2 + Math.random() * 2.0 + Math.min(3, state.score * 0.015),
-          emoji: chosen.emoji,
-          isGood: chosen.isGood,
-          pts: chosen.pts || 0,
-          radius: 16
+          speed: 2.8 + Math.random() * 2.2,
+          emoji: isBad ? '🗑️' : ['🫐', '🍎', '🥕', '🍌', '🍒'][Math.floor(Math.random() * 5)],
+          isBad: isBad,
+          size: 26
         });
       }
 
-      // Atualiza e desenha itens caindo
-      for (let i = state.items.length - 1; i >= 0; i--) {
-        const item = state.items[i];
-        item.y += item.speed;
+      // Desenha e atualiza itens
+      for (let i = items.length - 1; i >= 0; i--) {
+        const it = items[i];
+        it.y += it.speed;
 
-        ctx.font = '24px serif';
+        ctx.font = `${it.size}px sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(item.emoji, item.x, item.y);
+        ctx.fillText(it.emoji, it.x, it.y);
 
-        // Checagem de Colisão com Cesta/Player
-        const playerY = canvas.height - 40;
-        const dx = Math.abs(item.x - state.playerX);
-        const dy = Math.abs(item.y - playerY);
-
-        if (dx < (state.playerWidth / 2 + 10) && dy < 22) {
-          // Colidiu!
-          state.items.splice(i, 1);
-          if (item.isGood) {
-            state.score += item.pts;
-            soundFx.playFeed();
-            this.updateChuvaHUD(state.score, state.lives);
-          } else {
-            state.lives--;
-            soundFx.playGameOver();
-            this.updateChuvaHUD(state.score, state.lives);
-            if (state.lives <= 0) {
-              this.endChuvaGame(state.score);
+        // Colisão com a cesta
+        if (
+          it.y + it.size / 2 >= canvas.height - 35 &&
+          it.y - it.size / 2 <= canvas.height - 35 + basketHeight &&
+          Math.abs(it.x - basketX) < basketWidth / 2 + 10
+        ) {
+          if (it.isBad) {
+            lives--;
+            soundFx.playHurt();
+            this.updateChuvaHUD(score, lives);
+            if (lives <= 0) {
+              isGameOver = true;
+              this.endChuvaGame(score);
               return;
             }
+          } else {
+            score += 10;
+            soundFx.playCoin();
+            this.updateChuvaHUD(score, lives);
           }
+          items.splice(i, 1);
           continue;
         }
 
         // Passou da tela
-        if (item.y > canvas.height + 20) {
-          state.items.splice(i, 1);
+        if (it.y > canvas.height + 20) {
+          items.splice(i, 1);
         }
       }
 
-      // Desenha o Player (Cesta com Emoji do Pet)
-      const playerY = canvas.height - 40;
-      
-      // Sombra
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+      // Desenha a cesta ecológica
+      ctx.fillStyle = '#10b981';
       ctx.beginPath();
-      ctx.ellipse(state.playerX, canvas.height - 18, 22, 6, 0, 0, Math.PI * 2);
+      ctx.roundRect(basketX - basketWidth / 2, canvas.height - 35, basketWidth, basketHeight, [8, 8, 4, 4]);
       ctx.fill();
 
-      // Cesta
-      ctx.fillStyle = '#059669';
+      ctx.fillStyle = '#064e3b';
       ctx.beginPath();
-      ctx.roundRect(state.playerX - state.playerWidth / 2, playerY - 10, state.playerWidth, 22, 10);
+      ctx.roundRect(basketX - basketWidth / 2 + 4, canvas.height - 31, basketWidth - 8, 6, [3]);
       ctx.fill();
 
-      // Emoji do Pet dentro da cesta
-      ctx.font = '28px serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(petEmoji, state.playerX, playerY - 14);
-
-      this.animationFrameId = requestAnimationFrame(loop);
+      this.animationFrameId = requestAnimationFrame(gameLoop);
     };
 
-    this.animationFrameId = requestAnimationFrame(loop);
-    soundFx.playHappy();
-  }
-
-  updateChuvaHUD(score, lives) {
-    if (this.dom.chuvaScoreDisplay) {
-      this.dom.chuvaScoreDisplay.textContent = score;
-    }
-    if (this.dom.chuvaLivesDisplay) {
-      this.dom.chuvaLivesDisplay.textContent = '❤️'.repeat(Math.max(0, lives));
-    }
+    this.animationFrameId = requestAnimationFrame(gameLoop);
   }
 
   stopChuvaGame() {
-    if (this.gameStateChuva) {
-      this.gameStateChuva.running = false;
-    }
     if (this.animationFrameId) {
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = null;
     }
   }
 
-  endChuvaGame(score) {
-    this.stopChuvaGame();
-    soundFx.playGameOver();
-
-    const coinsEarned = Math.max(5, Math.floor(score / 4));
-    this.app.addCoins(coinsEarned);
-
-    // Aplica benefício no Pet
-    if (this.app.pet) {
-      const playResult = this.app.pet.play(score, coinsEarned);
-      if (playResult.evolved) {
-        this.app.handleEvolution(playResult.evolved);
-      }
-      this.app.saveGame();
-    }
-
-    if (this.dom.chuvaOverlay) {
-      this.dom.chuvaOverlay.classList.remove('hidden');
-      this.dom.chuvaOverlay.innerHTML = `
-        <div class="text-center p-6 bg-gray-950/95 border border-emerald-500/40 rounded-3xl max-w-xs mx-auto shadow-2xl">
-          <div class="text-4xl mb-2">🎉</div>
-          <h3 class="text-lg font-black text-white">Partida Concluída!</h3>
-          <p class="text-xs text-gray-300 mt-1">Pontuação Final: <strong class="text-emerald-400 text-base">${score}</strong></p>
-          <div class="my-3 p-2 rounded-xl bg-emerald-950/50 border border-emerald-800 text-xs text-emerald-300 font-bold flex items-center justify-center gap-2">
-            <span>🪙 +${coinsEarned} Moedas</span>
-            <span>•</span>
-            <span>💖 +Felicidade</span>
-          </div>
-          <button id="restart-chuva-btn" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-bold text-white text-xs shadow-lg shadow-emerald-600/30 transition-all">
-            Jogar Novamente
-          </button>
-        </div>
-      `;
-
-      const restartBtn = document.getElementById('restart-chuva-btn');
-      if (restartBtn) {
-        restartBtn.addEventListener('click', () => this.startChuvaGame());
-      }
+  updateChuvaHUD(score, lives) {
+    if (this.dom.chuvaScoreDisplay) this.dom.chuvaScoreDisplay.textContent = score;
+    if (this.dom.chuvaLivesDisplay) {
+      this.dom.chuvaLivesDisplay.textContent = '❤️'.repeat(Math.max(0, lives));
     }
   }
 
+  endChuvaGame(score) {
+    this.stopChuvaGame();
+    if (this.dom.chuvaOverlay) this.dom.chuvaOverlay.classList.remove('hidden');
+
+    const coinsEarned = Math.floor(score / 2);
+    this.app.addCoins(coinsEarned);
+
+    if (this.app.pet) {
+      this.app.pet.play(20, coinsEarned);
+      this.app.saveGame();
+    }
+
+    if (window.confetti) {
+      window.confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
+    }
+
+    alert(`🏁 Fim da Chuva de Alimentos!\n\nPontuação Final: ${score}\nRecompensa: +${coinsEarned} Moedas Ecológicas e Felicidade para o Pet!`);
+  }
+
   // ==========================================
-  // MINIGAME 2: MEMÓRIA DA BIODIVERSIDADE
+  // MINIGAME 2: MEMÓRIA DA FAUNA
   // ==========================================
   startMemoriaGame() {
     if (!this.dom.memoriaGrid) return;
+
+    const cardsData = [
+      { emoji: '🐾', name: 'Capivara' },
+      { emoji: '🐆', name: 'Onça' },
+      { emoji: '🦜', name: 'Arara' },
+      { emoji: '🐢', name: 'Tartaruga' },
+      { emoji: '🐸', name: 'Sapo' },
+      { emoji: '🐬', name: 'Boto' }
+    ];
+
+    const deck = [...cardsData, ...cardsData].sort(() => Math.random() - 0.5);
+
     this.dom.memoriaGrid.innerHTML = '';
-
-    const animals = ['🐆', '🦜', '🐊', '🐸', '🐬', '🐾'];
-    // Duplica e embaralha
-    const deck = [...animals, ...animals].sort(() => Math.random() - 0.5);
-
     let moves = 0;
     let matches = 0;
     let flippedCards = [];
@@ -363,22 +356,19 @@ export class MinigameManager {
     if (this.dom.memoriaMovesDisplay) this.dom.memoriaMovesDisplay.textContent = '0';
     if (this.dom.memoriaMatchesDisplay) this.dom.memoriaMatchesDisplay.textContent = '0/6';
 
-    deck.forEach((emoji, index) => {
-      const card = document.createElement('div');
+    deck.forEach((item) => {
+      const card = document.createElement('button');
+      card.type = 'button';
       card.className = 'aspect-square rounded-2xl bg-gray-800/80 border border-gray-700/80 flex items-center justify-center text-3xl cursor-pointer select-none transition-all hover:scale-105 shadow-md';
-      card.dataset.emoji = emoji;
-      card.dataset.index = index;
-      card.innerHTML = '<span class="opacity-0 transition-opacity">❓</span>';
+      card.dataset.emoji = item.emoji;
+      card.innerHTML = '<span class="opacity-0">❓</span>';
 
       card.addEventListener('click', () => {
         if (lockBoard || card.classList.contains('matched') || flippedCards.includes(card)) return;
 
-        // Revela
-        card.classList.remove('bg-gray-800/80');
-        card.classList.add('bg-emerald-950/80', 'border-emerald-500', 'ring-2', 'ring-emerald-400');
-        card.innerHTML = `<span class="opacity-100 transition-opacity transform scale-110">${emoji}</span>`;
+        card.innerHTML = `<span>${item.emoji}</span>`;
+        card.className = 'aspect-square rounded-2xl bg-emerald-950 border border-emerald-500 flex items-center justify-center text-3xl select-none scale-105 ring-2 ring-emerald-400 shadow-xl';
         soundFx.playClick();
-
         flippedCards.push(card);
 
         if (flippedCards.length === 2) {
@@ -387,11 +377,8 @@ export class MinigameManager {
 
           const [card1, card2] = flippedCards;
           if (card1.dataset.emoji === card2.dataset.emoji) {
-            // Acertou par!
             card1.classList.add('matched');
             card2.classList.add('matched');
-            card1.classList.replace('ring-emerald-400', 'ring-emerald-600');
-            card2.classList.replace('ring-emerald-400', 'ring-emerald-600');
             matches++;
             if (this.dom.memoriaMatchesDisplay) this.dom.memoriaMatchesDisplay.textContent = `${matches}/6`;
             soundFx.playCoin();
@@ -401,7 +388,6 @@ export class MinigameManager {
               setTimeout(() => this.endMemoriaGame(moves), 500);
             }
           } else {
-            // Errou par
             lockBoard = true;
             setTimeout(() => {
               card1.className = 'aspect-square rounded-2xl bg-gray-800/80 border border-gray-700/80 flex items-center justify-center text-3xl cursor-pointer select-none transition-all hover:scale-105 shadow-md';
@@ -434,5 +420,262 @@ export class MinigameManager {
     }
 
     alert(`🧠 Excelente Memória!\n\nVocê completou a Memória da Fauna em ${moves} jogadas.\nRecompensa: +${coinsEarned} Moedas e Felicidade para o Pet!`);
+  }
+
+  // ==========================================
+  // MINIGAME 3: SALTO ECOLÓGICO (RUNNER 2D)
+  // ==========================================
+  startSaltoGame() {
+    if (!this.dom.saltoCanvas) return;
+    const canvas = this.dom.saltoCanvas;
+    const ctx = canvas.getContext('2d');
+
+    canvas.width = 360;
+    canvas.height = 320;
+
+    if (this.dom.saltoOverlay) this.dom.saltoOverlay.classList.add('hidden');
+
+    let coins = 0;
+    let distance = 0;
+    let speed = 4.2;
+    let isGameOver = false;
+
+    // Jogador (Animal)
+    const petEmoji = this.app.pet && this.app.pet.species ? this.app.pet.species.emoji : '🐾';
+    const player = {
+      x: 50,
+      y: 220,
+      vy: 0,
+      gravity: 0.62,
+      jumpForce: -11.5,
+      isGrounded: true,
+      size: 32
+    };
+
+    // Obstáculos e Coletáveis
+    const obstacles = [];
+    const items = [];
+    let spawnTimer = 0;
+
+    const doJump = () => {
+      if (player.isGrounded && !isGameOver) {
+        player.vy = player.jumpForce;
+        player.isGrounded = false;
+        soundFx.playClick();
+      }
+    };
+
+    canvas.onclick = doJump;
+    canvas.ontouchstart = (e) => { e.preventDefault(); doJump(); };
+    window.onkeydown = (e) => {
+      if (e.code === 'Space' && this.currentTab === 'salto') {
+        e.preventDefault();
+        doJump();
+      }
+    };
+
+    const runnerLoop = () => {
+      if (isGameOver) return;
+
+      distance++;
+      if (this.dom.saltoDistanceDisplay) this.dom.saltoDistanceDisplay.textContent = Math.floor(distance / 10);
+      if (this.dom.saltoScoreDisplay) this.dom.saltoScoreDisplay.textContent = coins;
+
+      // Física do Pulo
+      player.vy += player.gravity;
+      player.y += player.vy;
+      if (player.y >= 220) {
+        player.y = 220;
+        player.vy = 0;
+        player.isGrounded = true;
+      }
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Fundo em camadas
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Solo do Bioma
+      ctx.fillStyle = '#064e3b';
+      ctx.fillRect(0, 252, canvas.width, 68);
+      ctx.fillStyle = '#10b981';
+      ctx.fillRect(0, 250, canvas.width, 4);
+
+      // Gerador de Obstáculos (troncos, plásticos) e Moedas
+      spawnTimer++;
+      if (spawnTimer >= 65) {
+        spawnTimer = 0;
+        if (Math.random() < 0.65) {
+          obstacles.push({
+            x: canvas.width + 20,
+            y: 228,
+            emoji: Math.random() < 0.5 ? '🪵' : '🧴',
+            size: 26
+          });
+        } else {
+          items.push({
+            x: canvas.width + 20,
+            y: 160 + Math.random() * 40,
+            emoji: '🪙',
+            size: 22
+          });
+        }
+      }
+
+      // Desenha Jogador
+      ctx.font = `${player.size}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(petEmoji, player.x, player.y);
+
+      // Atualiza e desenha Coletáveis
+      for (let i = items.length - 1; i >= 0; i--) {
+        const it = items[i];
+        it.x -= speed;
+        ctx.font = `${it.size}px sans-serif`;
+        ctx.fillText(it.emoji, it.x, it.y);
+
+        // Colisão com Moeda
+        if (Math.hypot(it.x - player.x, it.y - player.y) < 28) {
+          coins += 2;
+          soundFx.playCoin();
+          items.splice(i, 1);
+          continue;
+        }
+
+        if (it.x < -30) items.splice(i, 1);
+      }
+
+      // Atualiza e desenha Obstáculos
+      for (let i = obstacles.length - 1; i >= 0; i--) {
+        const obs = obstacles[i];
+        obs.x -= speed;
+        ctx.font = `${obs.size}px sans-serif`;
+        ctx.fillText(obs.emoji, obs.x, obs.y);
+
+        // Colisão com Obstáculo
+        if (Math.hypot(obs.x - player.x, obs.y - player.y) < 26) {
+          isGameOver = true;
+          soundFx.playHurt();
+          this.endSaltoGame(coins, Math.floor(distance / 10));
+          return;
+        }
+
+        if (obs.x < -30) obstacles.splice(i, 1);
+      }
+
+      this.saltoFrameId = requestAnimationFrame(runnerLoop);
+    };
+
+    this.saltoFrameId = requestAnimationFrame(runnerLoop);
+  }
+
+  stopSaltoGame() {
+    if (this.saltoFrameId) {
+      cancelAnimationFrame(this.saltoFrameId);
+      this.saltoFrameId = null;
+    }
+  }
+
+  endSaltoGame(coins, dist) {
+    this.stopSaltoGame();
+    if (this.dom.saltoOverlay) this.dom.saltoOverlay.classList.remove('hidden');
+
+    const totalCoins = coins + Math.floor(dist / 5);
+    this.app.addCoins(totalCoins);
+
+    if (this.app.pet) {
+      this.app.pet.play(20, totalCoins);
+      this.app.saveGame();
+    }
+
+    if (window.confetti) {
+      window.confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
+    }
+
+    alert(`🏃 Fim da Corrida no Bioma!\n\nDistância percorrida: ${dist} metros\nMoedas coletadas: ${coins}\nRecompensa Total: +${totalCoins} Moedas Ecológicas!`);
+  }
+
+  // ==========================================
+  // MINIGAME 4: RITMO DA NATUREZA (SIMON SAYS)
+  // ==========================================
+  startRitmoGame() {
+    this.ritmoSequence = [];
+    this.playerSequence = [];
+    this.ritmoRound = 1;
+    this.updateRitmoHUD();
+    this.nextRitmoRound();
+  }
+
+  nextRitmoRound() {
+    this.playerSequence = [];
+    this.ritmoSequence.push(Math.floor(Math.random() * 4));
+    this.updateRitmoHUD();
+    this.playSequence();
+  }
+
+  async playSequence() {
+    this.isShowingSequence = true;
+    if (this.dom.ritmoStatusDisplay) this.dom.ritmoStatusDisplay.textContent = 'Ouça os Elementos...';
+
+    await new Promise((r) => setTimeout(r, 600));
+
+    for (let i = 0; i < this.ritmoSequence.length; i++) {
+      const padIdx = this.ritmoSequence[i];
+      await this.highlightPad(padIdx);
+      await new Promise((r) => setTimeout(r, 300));
+    }
+
+    this.isShowingSequence = false;
+    if (this.dom.ritmoStatusDisplay) this.dom.ritmoStatusDisplay.textContent = 'Sua vez de repetir!';
+  }
+
+  async highlightPad(index) {
+    const pad = this.dom.ritmoPads[index];
+    if (!pad) return;
+
+    // Frequências harmônicas da natureza
+    const freqs = [261.63, 329.63, 392.0, 523.25];
+    soundFx.playTone(freqs[index], 0.25);
+
+    pad.classList.add('ring-4', 'ring-white', 'scale-105', 'brightness-125');
+    await new Promise((r) => setTimeout(r, 260));
+    pad.classList.remove('ring-4', 'ring-white', 'scale-105', 'brightness-125');
+  }
+
+  handlePadPress(index) {
+    if (this.isShowingSequence || this.ritmoSequence.length === 0) return;
+
+    this.highlightPad(index);
+    this.playerSequence.push(index);
+
+    const currentIndex = this.playerSequence.length - 1;
+    if (this.playerSequence[currentIndex] !== this.ritmoSequence[currentIndex]) {
+      // Errou
+      soundFx.playHurt();
+      if (this.dom.ritmoStatusDisplay) this.dom.ritmoStatusDisplay.textContent = 'Sequência incorreta!';
+      const reward = Math.max(5, (this.ritmoRound - 1) * 8);
+      this.app.addCoins(reward);
+      if (this.app.pet) {
+        this.app.pet.play(15, reward);
+        this.app.saveGame();
+      }
+      alert(`🎵 Melodia interrompida!\n\nVocê alcançou a Rodada ${this.ritmoRound}.\nRecompensa: +${reward} Moedas Ecológicas!`);
+      this.ritmoSequence = [];
+      return;
+    }
+
+    // Completou a rodada
+    if (this.playerSequence.length === this.ritmoSequence.length) {
+      soundFx.playCoin();
+      this.ritmoRound++;
+      if (this.dom.ritmoStatusDisplay) this.dom.ritmoStatusDisplay.textContent = 'Parabéns! Próxima rodada...';
+      setTimeout(() => this.nextRitmoRound(), 900);
+    }
+  }
+
+  updateRitmoHUD() {
+    if (this.dom.ritmoRoundDisplay) this.dom.ritmoRoundDisplay.textContent = this.ritmoRound;
   }
 }

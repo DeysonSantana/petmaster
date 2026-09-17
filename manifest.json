@@ -1,13 +1,31 @@
 {
   "name": "PetMaster - Santuário de Animais Virtuais",
   "short_name": "PetMaster",
-  "description": "Crie, cuide e liberte 35 espécies biológicas no Santuário Natural. 100% Offline e Gamificado.",
+  "id": "./index.html",
   "start_url": "./index.html",
+  "scope": "./",
+  "description": "Crie, cuide e liberte 35 espécies biológicas no Santuário Natural. 100% Offline e Gamificado.",
   "display": "standalone",
+  "display_override": ["standalone", "window-controls-overlay"],
   "background_color": "#062016",
   "theme_color": "#10b981",
   "orientation": "portrait-primary",
-  "categories": ["games", "education"],
+  "prefer_related_applications": false,
+  "categories": ["games", "education", "entertainment"],
+  "shortcuts": [
+    {
+      "name": "Santuário Natural",
+      "short_name": "Santuário",
+      "url": "./index.html#sanctuary",
+      "icons": [{ "src": "./favicon.svg", "sizes": "any" }]
+    },
+    {
+      "name": "Minigames da Fauna",
+      "short_name": "Jogos",
+      "url": "./index.html#games",
+      "icons": [{ "src": "./favicon.svg", "sizes": "any" }]
+    }
+  ],
   "icons": [
     {
       "src": "./favicon.svg",
