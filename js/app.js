@@ -127,7 +127,28 @@ class PetMasterApp {
 
       openSanctuaryBtn: document.getElementById('open-sanctuary-btn'),
       openShareBtn: document.getElementById('open-share-btn'),
-      toastContainer: document.getElementById('toast-container')
+      toastContainer: document.getElementById('toast-container'),
+
+      // Mobile Drawer (QuizMaster Standard)
+      mobileMenuToggleBtn: document.getElementById('mobile-menu-toggle-btn'),
+      closeMobileDrawerBtn: document.getElementById('close-mobile-drawer-btn'),
+      mobileDrawerContainer: document.getElementById('mobile-drawer-container'),
+      mobileDrawerBackdrop: document.getElementById('mobile-drawer-backdrop'),
+      mobileDrawerPanel: document.getElementById('mobile-drawer-panel'),
+      drawerBrandLogo: document.getElementById('drawer-brand-logo'),
+      drawerSanctuaryBtn: document.getElementById('drawer-sanctuary-btn'),
+      drawerStoreBtn: document.getElementById('drawer-store-btn'),
+      drawerGamesBtn: document.getElementById('drawer-games-btn'),
+      drawerAdoptBtn: document.getElementById('drawer-adopt-btn'),
+      drawerShareBtn: document.getElementById('drawer-share-btn'),
+      drawerSettingsBtn: document.getElementById('drawer-settings-btn'),
+      drawerAuthBtn: document.getElementById('drawer-auth-btn'),
+      drawerSoundBtn: document.getElementById('drawer-sound-btn'),
+      soundToggleBtn: document.getElementById('sound-toggle-btn'),
+      headerSoundIcon: document.getElementById('header-sound-icon'),
+      drawerThemeBtn: document.getElementById('drawer-theme-btn'),
+      drawerThemeName: document.getElementById('drawer-theme-name'),
+      drawerInstallBtn: document.getElementById('drawer-install-btn')
     };
   }
 
@@ -533,6 +554,143 @@ class PetMasterApp {
           window.location.reload();
         }
       });
+    }
+
+    // ==========================================
+    // CONTROLES DO PAINEL LATERAL (MOBILE DRAWER)
+    // ==========================================
+    if (this.dom.mobileMenuToggleBtn) {
+      this.dom.mobileMenuToggleBtn.addEventListener('click', () => {
+        soundFx.playClick();
+        this.openMobileDrawer();
+      });
+    }
+
+    if (this.dom.closeMobileDrawerBtn) {
+      this.dom.closeMobileDrawerBtn.addEventListener('click', () => {
+        soundFx.playClick();
+        this.closeMobileDrawer();
+      });
+    }
+
+    if (this.dom.mobileDrawerBackdrop) {
+      this.dom.mobileDrawerBackdrop.addEventListener('click', () => this.closeMobileDrawer());
+    }
+
+    if (this.dom.drawerBrandLogo) {
+      this.dom.drawerBrandLogo.addEventListener('click', () => {
+        soundFx.playClick();
+        this.closeMobileDrawer();
+      });
+    }
+
+    if (this.dom.drawerSanctuaryBtn) {
+      this.dom.drawerSanctuaryBtn.addEventListener('click', () => {
+        soundFx.playClick();
+        this.closeMobileDrawer();
+        if (this.sanctuary) this.sanctuary.openSanctuaryModal();
+      });
+    }
+
+    if (this.dom.drawerStoreBtn) {
+      this.dom.drawerStoreBtn.addEventListener('click', () => {
+        soundFx.playClick();
+        this.closeMobileDrawer();
+        this.openStoreModal();
+      });
+    }
+
+    if (this.dom.drawerGamesBtn) {
+      this.dom.drawerGamesBtn.addEventListener('click', () => {
+        soundFx.playClick();
+        this.closeMobileDrawer();
+        if (this.minigames) this.minigames.openModal();
+      });
+    }
+
+    if (this.dom.drawerAdoptBtn) {
+      this.dom.drawerAdoptBtn.addEventListener('click', () => {
+        soundFx.playClick();
+        this.closeMobileDrawer();
+        if (this.sanctuary) this.sanctuary.openAdoptModal();
+      });
+    }
+
+    if (this.dom.drawerShareBtn) {
+      this.dom.drawerShareBtn.addEventListener('click', () => {
+        soundFx.playClick();
+        this.closeMobileDrawer();
+        if (this.share) this.share.openShareModal(this.pet);
+      });
+    }
+
+    if (this.dom.drawerSettingsBtn) {
+      this.dom.drawerSettingsBtn.addEventListener('click', () => {
+        soundFx.playClick();
+        this.closeMobileDrawer();
+        this.openSettingsModal();
+      });
+    }
+
+    if (this.dom.drawerAuthBtn) {
+      this.dom.drawerAuthBtn.addEventListener('click', () => {
+        soundFx.playClick();
+        this.closeMobileDrawer();
+        if (this.auth) this.auth.openAuthModal();
+      });
+    }
+
+    if (this.dom.drawerThemeBtn) {
+      this.dom.drawerThemeBtn.addEventListener('click', () => {
+        soundFx.playClick();
+        this.closeMobileDrawer();
+        if (this.theme) this.theme.openThemeModal();
+      });
+    }
+
+    if (this.dom.drawerSoundBtn) {
+      this.dom.drawerSoundBtn.addEventListener('click', () => this.toggleSound());
+    }
+
+    if (this.dom.soundToggleBtn) {
+      this.dom.soundToggleBtn.addEventListener('click', () => this.toggleSound());
+    }
+  }
+
+  openMobileDrawer() {
+    if (this.dom.mobileDrawerContainer) this.dom.mobileDrawerContainer.classList.remove('pointer-events-none');
+    if (this.dom.mobileDrawerBackdrop) this.dom.mobileDrawerBackdrop.classList.add('active');
+    if (this.dom.mobileDrawerPanel) this.dom.mobileDrawerPanel.classList.add('active');
+    document.body.classList.add('overflow-hidden');
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  closeMobileDrawer() {
+    if (this.dom.mobileDrawerBackdrop) this.dom.mobileDrawerBackdrop.classList.remove('active');
+    if (this.dom.mobileDrawerPanel) this.dom.mobileDrawerPanel.classList.remove('active');
+    if (this.dom.mobileDrawerContainer) this.dom.mobileDrawerContainer.classList.add('pointer-events-none');
+    document.body.classList.remove('overflow-hidden');
+  }
+
+  toggleSound() {
+    const isMuted = soundFx.toggleMute();
+    this.updateAudioUI(isMuted);
+    this.showToast(isMuted ? 'Áudio silenciado.' : 'Áudio reativado.', 'info');
+  }
+
+  updateAudioUI(isMuted) {
+    if (this.dom.drawerSoundBtn) {
+      this.dom.drawerSoundBtn.textContent = isMuted ? 'Mudo' : 'Ligado';
+      this.dom.drawerSoundBtn.className = isMuted
+        ? 'px-2.5 py-1 rounded-lg bg-gray-800 text-gray-400 text-xs font-bold hover:bg-gray-700 transition-colors'
+        : 'px-2.5 py-1 rounded-lg bg-emerald-600/30 text-emerald-300 text-xs font-bold hover:bg-emerald-600 hover:text-white transition-colors';
+    }
+    if (this.dom.headerSoundIcon) {
+      this.dom.headerSoundIcon.setAttribute('data-lucide', isMuted ? 'volume-x' : 'volume-2');
+      if (window.lucide) window.lucide.createIcons();
+    }
+    if (this.dom.muteIcon) {
+      this.dom.muteIcon.textContent = isMuted ? '🔇' : '🔊';
     }
   }
 

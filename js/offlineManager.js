@@ -89,24 +89,47 @@ export class OfflineManager {
   }
 
   updateStatusUI() {
-    if (!this.dom.statusBadge) return;
+    if (this.dom.statusBadge) {
+      if (this.isOnline) {
+        if (this.dom.statusDot) {
+          this.dom.statusDot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
+        }
+        if (this.dom.statusText) {
+          this.dom.statusText.textContent = 'Online';
+          this.dom.statusText.className = 'text-xs font-semibold text-emerald-400';
+        }
+      } else {
+        if (this.dom.statusDot) {
+          this.dom.statusDot.className = 'w-2 h-2 rounded-full bg-amber-400';
+        }
+        if (this.dom.statusText) {
+          this.dom.statusText.textContent = 'Offline';
+          this.dom.statusText.className = 'text-xs font-semibold text-amber-400';
+        }
+      }
+    }
 
-    if (this.isOnline) {
-      if (this.dom.statusDot) {
-        this.dom.statusDot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
+    const drawerStatusBadge = document.getElementById('drawer-network-status-badge');
+    if (drawerStatusBadge) {
+      if (this.isOnline) {
+        drawerStatusBadge.innerHTML = '🟢 <span class="text-emerald-400">Conectado (Nuvem)</span>';
+      } else {
+        drawerStatusBadge.innerHTML = '⚡ <span class="text-amber-400">Modo Local (Offline)</span>';
       }
-      if (this.dom.statusText) {
-        this.dom.statusText.textContent = 'Online';
-        this.dom.statusText.className = 'text-xs font-semibold text-emerald-400';
-      }
-    } else {
-      if (this.dom.statusDot) {
-        this.dom.statusDot.className = 'w-2 h-2 rounded-full bg-amber-400';
-      }
-      if (this.dom.statusText) {
-        this.dom.statusText.textContent = 'Offline';
-        this.dom.statusText.className = 'text-xs font-semibold text-amber-400';
-      }
+    }
+
+    const drawerInstallBtn = document.getElementById('drawer-install-btn');
+    if (drawerInstallBtn && this.deferredInstallPrompt) {
+      drawerInstallBtn.classList.remove('hidden');
+      drawerInstallBtn.onclick = async () => {
+        this.deferredInstallPrompt.prompt();
+        const choice = await this.deferredInstallPrompt.userChoice;
+        if (choice.outcome === 'accepted') {
+          drawerInstallBtn.classList.add('hidden');
+          soundFx.playLevelUp();
+        }
+        this.deferredInstallPrompt = null;
+      };
     }
   }
 }

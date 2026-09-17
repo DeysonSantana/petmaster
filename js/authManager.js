@@ -117,6 +117,14 @@ export class AuthManager {
     if (this.dom.userName) {
       this.dom.userName.textContent = this.currentUser.displayName || 'Guardião';
     }
+    const drawerAvatar = document.getElementById('drawer-user-avatar-text');
+    const drawerName = document.getElementById('drawer-user-name');
+    const drawerStatus = document.getElementById('drawer-user-status');
+    const drawerAuthBtn = document.getElementById('drawer-auth-btn');
+    if (drawerAvatar) drawerAvatar.textContent = this.currentUser.avatar || '🐾';
+    if (drawerName) drawerName.textContent = this.currentUser.displayName || 'Guardião';
+    if (drawerStatus) drawerStatus.textContent = this.currentUser.isAnonymous ? 'Banco Local (GitHub Pages)' : 'Nuvem Conectada';
+    if (drawerAuthBtn) drawerAuthBtn.textContent = this.currentUser.isAnonymous ? 'Entrar' : 'Perfil';
   }
 
   async loginWithGoogle() {

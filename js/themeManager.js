@@ -68,6 +68,11 @@ export class ThemeManager {
       this.saveTheme(theme.id);
     }
 
+    const drawerThemeName = document.getElementById('drawer-theme-name');
+    if (drawerThemeName) {
+      drawerThemeName.textContent = theme.name;
+    }
+
     this.renderThemeOptions();
   }
 

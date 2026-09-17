@@ -78,49 +78,62 @@
       <!-- Moedas & Ações Principais -->
       <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
         
-        <!-- Contador de Moedas -->
-        <div class="px-3 py-1.5 rounded-xl bg-amber-950/60 border border-amber-600/40 text-amber-300 flex items-center gap-1.5 shadow-sm text-xs font-extrabold" title="Moedas Ecológicas">
+        <!-- Contador de Moedas (Sempre visível) -->
+        <div class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-amber-950/60 border border-amber-600/40 text-amber-300 flex items-center gap-1.5 shadow-sm text-xs font-extrabold" title="Moedas Ecológicas">
           <span class="text-base">🪙</span>
           <span id="user-coins-display">100</span>
         </div>
 
-        <!-- Botão Santuário / Coleção -->
-        <button id="open-sanctuary-btn" class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/50 text-emerald-300 text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm" title="Abrir Santuário e Animaldex">
-          <span class="text-sm">🌲</span>
-          <span class="hidden md:inline">Santuário</span>
-        </button>
+        <!-- Botões Visíveis no Desktop / Tablet (md+) -->
+        <div class="hidden md:flex items-center gap-1.5 sm:gap-2">
+          <!-- Botão Santuário / Coleção -->
+          <button id="open-sanctuary-btn" class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/50 text-emerald-300 text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm" title="Abrir Santuário e Animaldex">
+            <span class="text-sm">🌲</span>
+            <span>Santuário</span>
+          </button>
 
-        <!-- Botão Mercado / Loja -->
-        <button id="open-store-btn" class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-gray-900 hover:bg-gray-800 border border-gray-700 text-amber-300 text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm" title="Mercado de Alimentos e Itens">
-          <span class="text-sm">🛒</span>
-          <span class="hidden md:inline">Mercado</span>
-        </button>
+          <!-- Botão Mercado / Loja -->
+          <button id="open-store-btn" class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-gray-900 hover:bg-gray-800 border border-gray-700 text-amber-300 text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm" title="Mercado de Alimentos e Itens">
+            <span class="text-sm">🛒</span>
+            <span>Mercado</span>
+          </button>
 
-        <!-- Botão Compartilhar / QR Code -->
-        <button id="open-share-btn" class="p-2 sm:px-2.5 sm:py-1.5 rounded-xl bg-gray-900 hover:bg-gray-800 border border-gray-700 text-gray-200 text-xs font-semibold flex items-center gap-1 transition-all" title="Compartilhar Pet & Backup">
-          <i data-lucide="qr-code" class="w-4 h-4 text-emerald-400"></i>
-        </button>
+          <!-- Botão Compartilhar / QR Code -->
+          <button id="open-share-btn" class="p-2 sm:px-2.5 sm:py-1.5 rounded-xl bg-gray-900 hover:bg-gray-800 border border-gray-700 text-gray-200 text-xs font-semibold flex items-center gap-1 transition-all" title="Compartilhar Pet & Backup">
+            <i data-lucide="qr-code" class="w-4 h-4 text-emerald-400"></i>
+          </button>
 
-        <!-- Botão Temas -->
-        <button id="theme-toggle-btn" class="p-2 rounded-xl bg-gray-900 hover:bg-gray-800 border border-gray-700 text-gray-200 text-xs transition-all" title="Mudar Tema">
+          <!-- Botão Configurações -->
+          <button id="open-settings-btn" class="p-2 rounded-xl bg-gray-900 hover:bg-gray-800 border border-gray-700 text-gray-200 text-xs transition-all" title="Configurações e Nuvem">
+            <i data-lucide="settings" class="w-4 h-4 text-gray-400"></i>
+          </button>
+
+          <!-- Avatar / Perfil -->
+          <div class="flex items-center gap-1.5 cursor-pointer hover:opacity-90" title="Perfil do Guardião">
+            <div id="user-avatar-badge" class="w-8 h-8 rounded-xl bg-gray-800 border border-emerald-500/50 flex items-center justify-center text-base hover:scale-105 transition-transform">
+              🐾
+            </div>
+            <span id="user-name-display" class="hidden xl:inline text-xs font-bold text-gray-300">Guardião</span>
+          </div>
+        </div>
+
+        <!-- Botão Temas (Sempre Visível) -->
+        <button id="theme-toggle-btn" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gray-900/80 hover:bg-gray-800 border border-gray-700/80 flex items-center justify-center text-gray-200 text-xs transition-all shrink-0" title="Mudar Tema">
           <i data-lucide="palette" class="w-4 h-4 text-pink-400"></i>
         </button>
 
-        <!-- Botão Configurações -->
-        <button id="open-settings-btn" class="p-2 rounded-xl bg-gray-900 hover:bg-gray-800 border border-gray-700 text-gray-200 text-xs transition-all" title="Configurações e Nuvem">
-          <i data-lucide="settings" class="w-4 h-4 text-gray-400"></i>
+        <!-- Botão Alternar Som (Sempre Visível) -->
+        <button id="sound-toggle-btn" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gray-900/80 hover:bg-gray-800 border border-gray-700/80 flex items-center justify-center text-gray-200 text-xs transition-all shrink-0" title="Alternar Efeitos Sonoros">
+          <i id="header-sound-icon" data-lucide="volume-2" class="w-4 h-4 text-emerald-400"></i>
         </button>
 
-        <!-- Avatar / Perfil -->
-        <div class="flex items-center gap-1.5 cursor-pointer hover:opacity-90" title="Perfil do Guardião">
-          <div id="user-avatar-badge" class="w-8 h-8 rounded-xl bg-gray-800 border border-emerald-500/50 flex items-center justify-center text-base hover:scale-105 transition-transform">
-            🐾
-          </div>
-          <span id="user-name-display" class="hidden xl:inline text-xs font-bold text-gray-300">Guardião</span>
-        </div>
+        <!-- Botão Hamburger do Menu Lateral Mobile (Visível apenas em Mobile < md) -->
+        <button id="mobile-menu-toggle-btn" class="md:hidden w-9 h-9 rounded-xl bg-gray-900/80 border border-gray-700/80 hover:bg-gray-800 flex items-center justify-center text-gray-200 transition-colors shrink-0" title="Abrir Menu Lateral">
+          <i data-lucide="menu" class="w-5 h-5 text-emerald-400"></i>
+        </button>
 
-        <!-- Botão Instalar PWA (quando elegível) -->
-        <button id="install-pwa-btn" class="hidden px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1 shadow-md shadow-emerald-600/30 transition-all">
+        <!-- Botão Instalar PWA (quando elegível no Desktop) -->
+        <button id="install-pwa-btn" class="hidden px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold md:flex items-center gap-1 shadow-md shadow-emerald-600/30 transition-all">
           <i data-lucide="download" class="w-3.5 h-3.5"></i>
           <span class="hidden lg:inline">Instalar</span>
         </button>
@@ -128,6 +141,157 @@
 
     </div>
   </header>
+
+  <!-- ==========================================
+       PAINEL LATERAL MOBILE (ASIDE DRAWER) - PADRÃO QUIZMASTER
+       ========================================== -->
+  <div id="mobile-drawer-container" class="fixed inset-0 z-50 pointer-events-none">
+    <!-- Backdrop Overlay -->
+    <div id="mobile-drawer-backdrop" class="drawer-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm"></div>
+
+    <!-- Aside Panel Lateral -->
+    <aside id="mobile-drawer-panel" class="drawer-panel fixed top-0 right-0 bottom-0 w-[290px] xs:w-[320px] sm:w-[360px] bg-gray-950/95 border-l border-gray-800/90 p-5 flex flex-col justify-between overflow-y-auto shadow-2xl pointer-events-auto">
+      
+      <!-- Topo do Drawer -->
+      <div class="space-y-4">
+        <div class="flex items-center justify-between border-b border-gray-800 pb-3">
+          <div id="drawer-brand-logo" class="flex items-center gap-2.5 cursor-pointer group hover:opacity-90 transition-opacity" title="Ir para a Tela Inicial">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 via-teal-600 to-green-400 flex items-center justify-center shadow-md text-white group-hover:scale-105 transition-transform text-lg">
+              🐾
+            </div>
+            <div>
+              <h3 class="font-display font-extrabold text-base text-white leading-tight group-hover:text-emerald-300 transition-colors">PetMaster</h3>
+              <span class="text-[10px] text-gray-400 font-medium">Menu &amp; Navegação</span>
+            </div>
+          </div>
+          <button id="close-mobile-drawer-btn" class="p-1.5 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800 transition-colors">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <!-- Card de Usuário / Perfil no Drawer -->
+        <div id="drawer-auth-card" class="p-3 rounded-2xl bg-gray-900/80 border border-gray-800 flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <div id="drawer-user-avatar-container" class="w-9 h-9 rounded-full bg-emerald-600/30 text-emerald-300 flex items-center justify-center font-bold text-sm shrink-0">
+              <span id="drawer-user-avatar-text">🐾</span>
+            </div>
+            <div class="min-w-0">
+              <h4 id="drawer-user-name" class="font-bold text-xs text-white truncate">Guardião</h4>
+              <p id="drawer-user-status" class="text-[10px] text-gray-400">Banco Local (GitHub Pages)</p>
+            </div>
+          </div>
+          <button id="drawer-auth-btn" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white transition-colors shrink-0">
+            Entrar
+          </button>
+        </div>
+
+        <!-- Links de Navegação do Painel Lateral -->
+        <nav class="space-y-2 pt-1">
+          <!-- 1. Santuário Natural -->
+          <button id="drawer-sanctuary-btn" class="w-full p-3 rounded-2xl bg-gradient-to-r from-emerald-950/60 to-teal-950/60 hover:from-emerald-900/60 hover:to-teal-900/60 border border-emerald-500/30 text-left flex items-center gap-3 transition-all group">
+            <div class="w-10 h-10 rounded-xl bg-emerald-600/30 text-emerald-300 group-hover:scale-105 flex items-center justify-center shrink-0 transition-transform text-lg">
+              🌲
+            </div>
+            <div class="min-w-0">
+              <h4 class="font-bold text-xs sm:text-sm text-white">Santuário Natural</h4>
+              <p class="text-[10px] sm:text-[11px] text-emerald-300/80">Catálogo &amp; 35 Espécies Biológicas</p>
+            </div>
+          </button>
+
+          <!-- 2. Mercado da Fauna -->
+          <button id="drawer-store-btn" class="w-full p-3 rounded-2xl bg-gray-900/70 hover:bg-gray-800 border border-gray-800 text-left flex items-center gap-3 transition-all group">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 group-hover:scale-105 flex items-center justify-center shrink-0 transition-transform text-lg">
+              🛒
+            </div>
+            <div class="min-w-0">
+              <h4 class="font-bold text-xs sm:text-sm text-white">Mercado da Fauna</h4>
+              <p class="text-[10px] sm:text-[11px] text-gray-400">Alimentos, Sabão e Poções</p>
+            </div>
+          </button>
+
+          <!-- 3. Centro de Minigames -->
+          <button id="drawer-games-btn" class="w-full p-3 rounded-2xl bg-gray-900/70 hover:bg-gray-800 border border-gray-800 text-left flex items-center gap-3 transition-all group">
+            <div class="w-10 h-10 rounded-xl bg-purple-600/20 text-purple-300 group-hover:scale-105 flex items-center justify-center shrink-0 transition-transform text-lg">
+              🎮
+            </div>
+            <div class="min-w-0">
+              <h4 class="font-bold text-xs sm:text-sm text-white">Centro de Minigames</h4>
+              <p class="text-[10px] sm:text-[11px] text-gray-400">Chuva de Alimentos &amp; Memória</p>
+            </div>
+          </button>
+
+          <!-- 4. Adotar Novo Ninho -->
+          <button id="drawer-adopt-btn" class="w-full p-3 rounded-2xl bg-gray-900/70 hover:bg-gray-800 border border-gray-800 text-left flex items-center gap-3 transition-all group">
+            <div class="w-10 h-10 rounded-xl bg-teal-600/20 text-teal-300 group-hover:scale-105 flex items-center justify-center shrink-0 transition-transform text-lg">
+              🥚
+            </div>
+            <div class="min-w-0">
+              <h4 class="font-bold text-xs sm:text-sm text-white">Adotar Novo Ninho</h4>
+              <p class="text-[10px] sm:text-[11px] text-gray-400">Incubar novas espécies raras</p>
+            </div>
+          </button>
+
+          <!-- 5. Compartilhar Animal -->
+          <button id="drawer-share-btn" class="w-full p-3 rounded-2xl bg-gray-900/70 hover:bg-gray-800 border border-gray-800 text-left flex items-center gap-3 transition-all group">
+            <div class="w-10 h-10 rounded-xl bg-indigo-600/20 text-indigo-400 group-hover:scale-105 flex items-center justify-center shrink-0 transition-transform">
+              <i data-lucide="share-2" class="w-5 h-5"></i>
+            </div>
+            <div class="min-w-0">
+              <h4 class="font-bold text-xs sm:text-sm text-white">Compartilhar Animal</h4>
+              <p class="text-[10px] sm:text-[11px] text-gray-400">Link portátil, encurtador e QR Code</p>
+            </div>
+          </button>
+
+          <!-- 6. Configurações da Nuvem -->
+          <button id="drawer-settings-btn" class="w-full p-3 rounded-2xl bg-gray-900/70 hover:bg-gray-800 border border-gray-800 text-left flex items-center gap-3 transition-all group">
+            <div class="w-10 h-10 rounded-xl bg-gray-800 text-gray-400 group-hover:scale-105 flex items-center justify-center shrink-0 transition-transform">
+              <i data-lucide="settings" class="w-5 h-5"></i>
+            </div>
+            <div class="min-w-0">
+              <h4 class="font-bold text-xs sm:text-sm text-white">Configurações Gerais</h4>
+              <p class="text-[10px] sm:text-[11px] text-gray-400">Firebase Cloud &amp; Backup Físico</p>
+            </div>
+          </button>
+        </nav>
+      </div>
+
+      <!-- Rodapé do Drawer -->
+      <div class="pt-4 border-t border-gray-800 space-y-2.5">
+        <!-- Status de Conexão no Drawer -->
+        <div class="p-2.5 rounded-xl bg-gray-900/60 border border-gray-800 flex items-center justify-between text-xs font-semibold">
+          <span class="text-gray-400">Status:</span>
+          <span id="drawer-network-status-badge">🟢 <span class="text-emerald-400">Conectado (Nuvem)</span></span>
+        </div>
+
+        <!-- Botão Instalar App no Drawer -->
+        <button id="drawer-install-btn" type="button" class="hidden w-full p-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 text-xs font-bold text-white flex items-center justify-center gap-2 shadow-md transition-all">
+          <i data-lucide="download" class="w-4 h-4"></i>
+          <span>Instalar Aplicativo (PWA)</span>
+        </button>
+
+        <!-- Seletor de Tema -->
+        <button id="drawer-theme-btn" type="button" class="w-full p-2.5 rounded-xl bg-gray-900/80 hover:bg-gray-800 border border-gray-800 flex items-center justify-between text-xs font-semibold text-gray-200 transition-colors">
+          <span class="flex items-center gap-2">
+            <span class="text-sm">🎨</span>
+            <span>Tema: <strong id="drawer-theme-name" class="text-emerald-400">Santuário Esmeralda</strong></span>
+          </span>
+          <i data-lucide="chevron-right" class="w-4 h-4 text-gray-500"></i>
+        </button>
+
+        <!-- Alternador de Som -->
+        <div class="flex items-center justify-between p-2.5 rounded-xl bg-gray-900/60 border border-gray-800">
+          <div class="flex items-center gap-2">
+            <i data-lucide="volume-2" class="w-4 h-4 text-emerald-400"></i>
+            <span class="text-xs text-gray-300 font-medium">Efeitos Sonoros</span>
+          </div>
+          <button id="drawer-sound-btn" class="px-2.5 py-1 rounded-lg bg-emerald-600/30 text-emerald-300 text-xs font-bold hover:bg-emerald-600 hover:text-white transition-colors">
+            Ligado
+          </button>
+        </div>
+        <p class="text-[10px] text-gray-500 text-center font-mono">PetMaster v1.0.0 • Offline &amp; GitHub Pages</p>
+      </div>
+    </aside>
+  </div>
 
   <!-- ==========================================
        2. CONTEÚDO PRINCIPAL (SPA)
