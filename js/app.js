@@ -13,11 +13,13 @@ import { ThemeManager } from './themeManager.js';
 import { MinigameManager } from './minigames.js';
 import { SanctuaryManager } from './sanctuaryManager.js';
 import { ShareManager } from './shareManager.js';
+import { Pet3DEngine } from './pet3D.js';
 
 class PetMasterApp {
   constructor() {
     this.db = db;
     this.pet = null;
+    this.pet3D = null;
     this.coins = 100;
     this.inventory = { berry: 5, leaf: 5, insect: 3, soap: 3 };
 
@@ -43,6 +45,19 @@ class PetMasterApp {
     this.minigames = new MinigameManager(this);
     this.sanctuary = new SanctuaryManager(this);
     this.share = new ShareManager(this);
+
+    // Inicializa Motor 3D Procedural (WebGL Three.js)
+    if (this.dom.pet3DViewport && typeof THREE !== 'undefined') {
+      try {
+        this.pet3D = new Pet3DEngine(this.dom.pet3DViewport, this);
+        this.pet3D.buildPet(this.pet);
+      } catch (err) {
+        console.warn('Falha ao inicializar WebGL 3D; fallback ativado:', err);
+        if (this.dom.petAvatarContainer) this.dom.petAvatarContainer.classList.remove('hidden');
+      }
+    } else {
+      if (this.dom.petAvatarContainer) this.dom.petAvatarContainer.classList.remove('hidden');
+    }
 
     this.bindGlobalEvents();
     this.renderStore();
@@ -91,6 +106,7 @@ class PetMasterApp {
 
       // Habitat e Pet
       habitatRoom: document.getElementById('habitat-room'),
+      pet3DViewport: document.getElementById('pet-3d-viewport'),
       petAvatarContainer: document.getElementById('pet-avatar-container'),
       petAvatar: document.getElementById('pet-avatar'),
       petSpeechBubble: document.getElementById('pet-speech-bubble'),
@@ -188,6 +204,7 @@ class PetMasterApp {
     });
     this.saveGame();
     this.updateStaticPetInfo();
+    if (this.pet3D) this.pet3D.buildPet(this.pet);
   }
 
   loadFromBackup(data) {
@@ -202,6 +219,7 @@ class PetMasterApp {
     this.saveGame();
     this.updateCoinsUI();
     this.updateStaticPetInfo();
+    if (this.pet3D) this.pet3D.buildPet(this.pet);
   }
 
   addCoins(amount) {
@@ -243,6 +261,9 @@ class PetMasterApp {
         this.pet.update(clampedDelta);
         this.renderPetHUD();
         this.renderPetAvatar();
+        if (this.pet3D) {
+          this.pet3D.update(clampedDelta);
+        }
       }
 
       // Auto-save a cada 10 segundos
@@ -858,6 +879,7 @@ class PetMasterApp {
 
     alert(`✨ EVOLUÇÃO BIOLÓGICA!\n\nSeu animalzinho cresceu e atingiu a fase: ${newStageName.toUpperCase()}!\nNovos cuidados e comportamentos foram desbloqueados.`);
     this.updateStaticPetInfo();
+    if (this.pet3D) this.pet3D.buildPet(this.pet);
     this.saveGame();
   }
 

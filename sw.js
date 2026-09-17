@@ -25,7 +25,9 @@ const STATIC_ASSETS = [
   './js/sanctuaryManager.js',
   './js/shareManager.js',
   './js/qrcodeEngine.js',
-  './js/offlineManager.js'
+  './js/offlineManager.js',
+  './js/pet3D.js',
+  './js/three.min.js'
 ];
 
 // Instalação: Pré-cache dos ativos estáticos fundamentais

@@ -45,6 +45,9 @@
   <!-- LZ-String para Compressão de URL -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
 
+  <!-- Three.js (WebGL 3D Engine Local / 100% Offline) -->
+  <script src="js/three.min.js"></script>
+
   <!-- Estilos Customizados -->
   <link rel="stylesheet" href="css/pet-animations.css" />
   <link rel="stylesheet" href="css/style.css" />
@@ -419,18 +422,23 @@
         </div>
       </div>
 
-      <!-- Avatar Interativo do Animal -->
-      <div id="pet-avatar-container" class="relative z-10 flex flex-col items-center justify-center">
-        <div id="pet-avatar" class="text-7xl sm:text-8xl select-none cursor-pointer transition-all filter drop-shadow-2xl animate-pet-idle" title="Clique para interagir com carinho">
-          🥚
+      <!-- Viewport 3D do Animal Interativo -->
+      <div id="pet-3d-viewport" class="relative z-10 w-full max-w-sm h-72 sm:h-80 flex items-center justify-center">
+        <!-- Fallback 2D se WebGL estiver indisponível -->
+        <div id="pet-avatar-container" class="hidden relative z-10 flex flex-col items-center justify-center">
+          <div id="pet-avatar" class="text-7xl sm:text-8xl select-none cursor-pointer transition-all filter drop-shadow-2xl animate-pet-idle" title="Clique para interagir com carinho">
+            🥚
+          </div>
+          <div class="w-24 h-4 rounded-full bg-black/40 blur-sm mt-3"></div>
         </div>
-        <!-- Sombra no Chão do Habitat -->
-        <div class="w-24 h-4 rounded-full bg-black/40 blur-sm mt-3"></div>
       </div>
 
-      <p class="text-[11px] text-gray-400 mt-4 relative z-10 italic">
-        Dica: Toque no animal para acariciá-lo ou chocá-lo!
-      </p>
+      <!-- Badge de Controle Interativo 3D -->
+      <div class="flex items-center gap-2 relative z-10 mt-1">
+        <span class="px-2.5 py-1 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-[10px] text-emerald-300 font-bold flex items-center gap-1 shadow-sm">
+          <span>🎮</span> Animal 3D • Arraste para girar • Toque para acariciar
+        </span>
+      </div>
     </section>
 
   </main>
