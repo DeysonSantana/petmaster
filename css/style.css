@@ -1,0 +1,213 @@
+/**
+ * PetMaster - Folha de Estilos Global
+ * Suporta 5 Temas Dinâmicos, Glassmorphism, Dock Flutuante e Design Mobile-First.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@600;700;800;900&display=swap');
+
+:root {
+  --font-sans: 'Plus Jakarta Sans', sans-serif;
+  --font-display: 'Outfit', sans-serif;
+
+  /* Tema Padrão: 1. Santuário Esmeralda */
+  --bg-main: #041610;
+  --text-main: #ecfdf5;
+  --card-bg: rgba(6, 30, 22, 0.85);
+  --card-border: rgba(16, 185, 129, 0.2);
+  --mesh-1: rgba(16, 185, 129, 0.22);
+  --mesh-2: rgba(5, 150, 105, 0.16);
+  --mesh-3: rgba(52, 211, 153, 0.12);
+  --accent-color: #10b981;
+}
+
+/* ===================================================
+   SISTEMA DE TEMAS BIOLÓGICOS E DINÂMICOS
+   =================================================== */
+
+/* 2. SAVANA SUNSET */
+[data-theme="sunset"] {
+  --bg-main: #140a08;
+  --text-main: #fff7ed;
+  --card-bg: rgba(28, 14, 11, 0.88);
+  --card-border: rgba(249, 115, 22, 0.22);
+  --mesh-1: rgba(249, 115, 22, 0.22);
+  --mesh-2: rgba(244, 63, 94, 0.16);
+  --mesh-3: rgba(234, 179, 8, 0.14);
+  --accent-color: #f97316;
+}
+
+/* 3. OCEANO PROFUNDO */
+[data-theme="ocean"] {
+  --bg-main: #031326;
+  --text-main: #f0f9ff;
+  --card-bg: rgba(5, 24, 48, 0.88);
+  --card-border: rgba(14, 165, 233, 0.24);
+  --mesh-1: rgba(14, 165, 233, 0.24);
+  --mesh-2: rgba(56, 189, 248, 0.18);
+  --mesh-3: rgba(99, 102, 241, 0.15);
+  --accent-color: #0ea5e9;
+}
+
+/* 4. NEON CYBERPUNK */
+[data-theme="cyberpunk"] {
+  --bg-main: #0a0614;
+  --text-main: #faf5ff;
+  --card-bg: rgba(18, 11, 36, 0.9);
+  --card-border: rgba(168, 85, 247, 0.25);
+  --mesh-1: rgba(168, 85, 247, 0.2);
+  --mesh-2: rgba(236, 72, 153, 0.18);
+  --mesh-3: rgba(6, 182, 212, 0.14);
+  --accent-color: #a855f7;
+}
+
+/* 5. PASTEL CONFORTO (MODO CLARO) */
+[data-theme="pastel"], .light-theme {
+  --bg-main: #f4fbf7;
+  --text-main: #064e3b;
+  --card-bg: rgba(255, 255, 255, 0.94);
+  --card-border: rgba(110, 231, 183, 0.4);
+  --mesh-1: rgba(16, 185, 129, 0.08);
+  --mesh-2: rgba(236, 72, 153, 0.05);
+  --mesh-3: rgba(56, 189, 248, 0.06);
+  --accent-color: #059669;
+}
+
+[data-theme="pastel"] body, body.light-theme {
+  background-color: #f4fbf7;
+  color: #064e3b;
+}
+
+[data-theme="pastel"] .glass-card, .light-theme .glass-card {
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(167, 243, 208, 0.8);
+  box-shadow: 0 12px 36px rgba(6, 78, 59, 0.06);
+}
+
+[data-theme="pastel"] .text-white, .light-theme .text-white {
+  color: #064e3b !important;
+}
+
+[data-theme="pastel"] .text-gray-100, .light-theme .text-gray-100,
+[data-theme="pastel"] .text-gray-200, .light-theme .text-gray-200 {
+  color: #065f46 !important;
+}
+
+[data-theme="pastel"] .text-gray-300, .light-theme .text-gray-300,
+[data-theme="pastel"] .text-gray-400, .light-theme .text-gray-400 {
+  color: #047857 !important;
+}
+
+[data-theme="pastel"] .bg-gray-900, .light-theme .bg-gray-900,
+[data-theme="pastel"] .bg-gray-900\/80, .light-theme .bg-gray-900\/80,
+[data-theme="pastel"] .bg-gray-900\/60, .light-theme .bg-gray-900\/60 {
+  background-color: #e6f7ef !important;
+}
+
+[data-theme="pastel"] .bg-gray-800, .light-theme .bg-gray-800,
+[data-theme="pastel"] .bg-gray-800\/80, .light-theme .bg-gray-800\/80 {
+  background-color: #d1fae5 !important;
+  color: #064e3b !important;
+}
+
+[data-theme="pastel"] .border-gray-800, .light-theme .border-gray-800,
+[data-theme="pastel"] .border-gray-700, .light-theme .border-gray-700 {
+  border-color: #a7f3d0 !important;
+}
+
+/* ===================================================
+   ESTRUTURA E ELEMENTOS DA SPA
+   =================================================== */
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+/* Fundo Dinâmico com Malha de Gradientes */
+.bg-mesh {
+  background-image: 
+    radial-gradient(at 0% 0%, var(--mesh-1) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, var(--mesh-2) 0px, transparent 50%),
+    radial-gradient(at 50% 100%, var(--mesh-3) 0px, transparent 50%);
+  background-attachment: fixed;
+}
+
+/* Cards com Efeito Vidro Fosco (Glassmorphism) */
+.glass-card {
+  background: var(--card-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--card-border);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.glass-pill {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Habitat / Pet Room */
+.habitat-view {
+  position: relative;
+  background: radial-gradient(circle at 50% 60%, rgba(16, 185, 129, 0.15) 0%, transparent 70%);
+  min-height: 280px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Dock Flutuante de Ações na Parte Inferior */
+.action-dock {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.dock-btn {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dock-btn:hover {
+  transform: translateY(-4px);
+}
+
+.dock-btn:active {
+  transform: scale(0.92);
+}
+
+/* Barras de Progresso Fluidas */
+.meter-bar-fill {
+  transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.3s ease;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.28);
+}

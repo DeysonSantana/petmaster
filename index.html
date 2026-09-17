@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="emerald" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>PetMaster - Santuário de Animais Virtuais</title>
+  <meta name="description" content="Crie, cuide e liberte 35 espécies biológicas no Santuário Natural. 100% Offline e Gamificado." />
+  <meta name="theme-color" content="#10b981" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="alternate icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐾</text></svg>" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Canvas Confetti CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+  <!-- LZ-String para Compressão de URL -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
+
+  <!-- Estilos Customizados -->
+  <link rel="stylesheet" href="css/pet-animations.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="bg-mesh text-gray-100 flex flex-col min-h-screen select-none pb-24 md:pb-6">
+
+  <!-- ==========================================
+       1. HEADER / BARRA DE NAVEGAÇÃO SUPERIOR
+       ========================================== -->
+  <header class="w-full border-b border-gray-800/80 bg-gray-950/90 backdrop-blur-md sticky top-0 z-40 shadow-sm">
+    <div class="max-w-5xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-2 sm:gap-4">
+      
+      <!-- Marca / Logo -->
+      <div class="flex items-center gap-2.5 shrink-0 cursor-pointer group">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 via-teal-600 to-green-400 flex items-center justify-center shadow-lg shadow-emerald-500/20 group-hover:scale-105 transition-transform">
+          <span class="text-xl">🐾</span>
+        </div>
+        <div class="flex flex-col justify-center">
+          <div class="flex items-center gap-1.5">
+            <span class="font-display font-extrabold text-lg sm:text-xl tracking-tight text-white leading-tight">PetMaster</span>
+            <!-- Status Badge Offline / Online -->
+            <div id="network-status-badge" class="px-2 py-0.5 rounded-full bg-gray-900 border border-gray-700 flex items-center gap-1 cursor-default text-[10px]" title="Status da Conexão">
+              <span id="network-status-dot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span id="network-status-text" class="hidden sm:inline text-xs font-semibold text-emerald-400">Online</span>
+            </div>
+          </div>
+          <span class="text-[10px] text-emerald-300/80 font-medium hidden sm:inline leading-none">35 Espécies • Santuário Natural</span>
+        </div>
+      </div>
+
+      <!-- Moedas & Ações Principais -->
+      <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        
+        <!-- Contador de Moedas -->
+        <div class="px-3 py-1.5 rounded-xl bg-amber-950/60 border border-amber-600/40 text-amber-300 flex items-center gap-1.5 shadow-sm text-xs font-extrabold" title="Moedas Ecológicas">
+          <span class="text-base">🪙</span>
+          <span id="user-coins-display">100</span>
+        </div>
+
+        <!-- Botão Santuário / Coleção -->
+        <button id="open-sanctuary-btn" class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/50 text-emerald-300 text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm" title="Abrir Santuário e Animaldex">
+          <span class="text-sm">🌲</span>
+          <span class="hidden md:inline">Santuário</span>
+        </button>
+
+        <!-- Botão Mercado / Loja -->
+        <button id="open-store-btn" class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-gray-900 hover:bg-gray-800 border border-gray-700 text-amber-300 text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm" title="Mercado de Alimentos e Itens">
+          <span class="text-sm">🛒</span>
+          <span class="hidden md:inline">Mercado</span>
+        </button>
+
+        <!-- Botão Compartilhar / QR Code -->
+        <button id="open-share-btn" class="p-2 sm:px-2.5 sm:py-1.5 rounded-xl bg-gray-900 hover:bg-gray-800 border border-gray-700 text-gray-200 text-xs font-semibold flex items-center gap-1 transition-all" title="Compartilhar Pet & Backup">
+          <i data-lucide="qr-code" class="w-4 h-4 text-emerald-400"></i>
+        </button>
+
+        <!-- Botão Temas -->
+        <button id="theme-toggle-btn" class="p-2 rounded-xl bg-gray-900 hover:bg-gray-800 border border-gray-700 text-gray-200 text-xs transition-all" title="Mudar Tema">
+          <i data-lucide="palette" class="w-4 h-4 text-pink-400"></i>
+        </button>
+
+        <!-- Botão Configurações -->
+        <button id="open-settings-btn" class="p-2 rounded-xl bg-gray-900 hover:bg-gray-800 border border-gray-700 text-gray-200 text-xs transition-all" title="Configurações e Nuvem">
+          <i data-lucide="settings" class="w-4 h-4 text-gray-400"></i>
+        </button>
+
+        <!-- Avatar / Perfil -->
+        <div class="flex items-center gap-1.5 cursor-pointer hover:opacity-90" title="Perfil do Guardião">
+          <div id="user-avatar-badge" class="w-8 h-8 rounded-xl bg-gray-800 border border-emerald-500/50 flex items-center justify-center text-base hover:scale-105 transition-transform">
+            🐾
+          </div>
+          <span id="user-name-display" class="hidden xl:inline text-xs font-bold text-gray-300">Guardião</span>
+        </div>
+
+        <!-- Botão Instalar PWA (quando elegível) -->
+        <button id="install-pwa-btn" class="hidden px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1 shadow-md shadow-emerald-600/30 transition-all">
+          <i data-lucide="download" class="w-3.5 h-3.5"></i>
+          <span class="hidden lg:inline">Instalar</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ==========================================
+       2. CONTEÚDO PRINCIPAL (SPA)
+       ========================================== -->
+  <main class="max-w-4xl w-full mx-auto px-3 sm:px-6 pt-4 flex-1 flex flex-col gap-4">
+    
+    <!-- Cartão de Informações do Animal -->
+    <section class="glass-card rounded-3xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-3.5 w-full sm:w-auto">
+        <div class="flex flex-col">
+          <div class="flex items-center gap-2">
+            <h2 id="pet-name-display" class="font-display text-xl sm:text-2xl font-black text-white">Pipoca</h2>
+            <span id="pet-stage-badge" class="px-2.5 py-0.5 rounded-full bg-emerald-950 border border-emerald-500/60 text-emerald-300 text-[11px] font-bold">
+              🥚 Ovo
+            </span>
+            <span id="pet-level-display" class="px-2 py-0.5 rounded-full bg-indigo-950 border border-indigo-500/60 text-indigo-300 text-[11px] font-extrabold font-mono">
+              Nv. 1
+            </span>
+          </div>
+          <p id="pet-species-display" class="text-xs text-emerald-400 font-medium mt-0.5">
+            🐾 Capivara (Hydrochoerus hydrochaeris)
+          </p>
+        </div>
+      </div>
+
+      <!-- Barra de Experiência (XP) -->
+      <div class="w-full sm:w-64 flex flex-col gap-1">
+        <div class="flex justify-between text-[11px] text-gray-300 font-semibold">
+          <span>Experiência (XP)</span>
+          <span id="xp-progress-text" class="text-emerald-400 font-mono">0 XP</span>
+        </div>
+        <div class="w-full h-3 rounded-full bg-gray-950 border border-gray-800 overflow-hidden p-0.5">
+          <div id="xp-progress-bar" class="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400 meter-bar-fill" style="width: 0%;"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HUD de Atributos Vitais (5 Barras) -->
+    <section class="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+      <!-- Fome -->
+      <div class="glass-card rounded-2xl p-2.5 flex flex-col gap-1">
+        <div class="flex items-center justify-between text-xs">
+          <span class="flex items-center gap-1 font-bold text-orange-400">
+            <span>🍎</span> Fome
+          </span>
+          <span id="val-hunger" class="font-mono text-[11px] font-bold text-gray-300">90%</span>
+        </div>
+        <div class="w-full h-2 rounded-full bg-gray-950 overflow-hidden">
+          <div id="bar-hunger" class="h-full bg-orange-500 meter-bar-fill" style="width: 90%;"></div>
+        </div>
+      </div>
+
+      <!-- Higiene -->
+      <div class="glass-card rounded-2xl p-2.5 flex flex-col gap-1">
+        <div class="flex items-center justify-between text-xs">
+          <span class="flex items-center gap-1 font-bold text-cyan-400">
+            <span>🧼</span> Higiene
+          </span>
+          <span id="val-hygiene" class="font-mono text-[11px] font-bold text-gray-300">90%</span>
+        </div>
+        <div class="w-full h-2 rounded-full bg-gray-950 overflow-hidden">
+          <div id="bar-hygiene" class="h-full bg-cyan-500 meter-bar-fill" style="width: 90%;"></div>
+        </div>
+      </div>
+
+      <!-- Energia -->
+      <div class="glass-card rounded-2xl p-2.5 flex flex-col gap-1">
+        <div class="flex items-center justify-between text-xs">
+          <span class="flex items-center gap-1 font-bold text-yellow-400">
+            <span>⚡</span> Energia
+          </span>
+          <span id="val-energy" class="font-mono text-[11px] font-bold text-gray-300">90%</span>
+        </div>
+        <div class="w-full h-2 rounded-full bg-gray-950 overflow-hidden">
+          <div id="bar-energy" class="h-full bg-yellow-500 meter-bar-fill" style="width: 90%;"></div>
+        </div>
+      </div>
+
+      <!-- Felicidade -->
+      <div class="glass-card rounded-2xl p-2.5 flex flex-col gap-1">
+        <div class="flex items-center justify-between text-xs">
+          <span class="flex items-center gap-1 font-bold text-pink-400">
+            <span>💖</span> Alegria
+          </span>
+          <span id="val-happiness" class="font-mono text-[11px] font-bold text-gray-300">90%</span>
+        </div>
+        <div class="w-full h-2 rounded-full bg-gray-950 overflow-hidden">
+          <div id="bar-happiness" class="h-full bg-pink-500 meter-bar-fill" style="width: 90%;"></div>
+        </div>
+      </div>
+
+      <!-- Saúde Geral -->
+      <div class="glass-card rounded-2xl p-2.5 flex flex-col gap-1 col-span-2 sm:col-span-1">
+        <div class="flex items-center justify-between text-xs">
+          <span class="flex items-center gap-1 font-bold text-emerald-400">
+            <span>❤️</span> Saúde
+          </span>
+          <span id="val-health" class="font-mono text-[11px] font-bold text-gray-300">100%</span>
+        </div>
+        <div class="w-full h-2 rounded-full bg-gray-950 overflow-hidden">
+          <div id="bar-health" class="h-full bg-emerald-500 meter-bar-fill" style="width: 100%;"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         3. HABITAT / PET ROOM (SALA PRINCIPAL)
+         ========================================== -->
+    <section id="habitat-room" class="glass-card rounded-3xl p-6 relative flex-1 flex flex-col items-center justify-center min-h-[340px] overflow-hidden habitat-view">
+      
+      <!-- Overlay Noturno durante o Sono -->
+      <div id="night-overlay" class="hidden absolute inset-0 bg-slate-950/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center pointer-events-none transition-all">
+        <span class="text-4xl animate-bounce">🌙</span>
+        <span class="text-xs font-bold text-indigo-300 mt-2">Dormindo tranquilamente...</span>
+      </div>
+
+      <!-- Container de Efeitos Flutuantes (+XP, corações) -->
+      <div id="floating-effects-container" class="absolute inset-0 pointer-events-none z-20"></div>
+
+      <!-- Balão de Fala do Pet -->
+      <div class="relative z-10 mb-4 flex items-center gap-1.5">
+        <span id="pet-status-emoji" class="text-base hidden sm:inline">💬</span>
+        <div id="pet-speech-bubble" class="px-4 py-2 rounded-2xl bg-gray-900/90 border border-emerald-500/50 text-white text-xs sm:text-sm font-bold shadow-xl flex items-center gap-1.5 animate-bounce">
+          Estou ótimo! 🐾
+        </div>
+      </div>
+
+      <!-- Avatar Interativo do Animal -->
+      <div id="pet-avatar-container" class="relative z-10 flex flex-col items-center justify-center">
+        <div id="pet-avatar" class="text-7xl sm:text-8xl select-none cursor-pointer transition-all filter drop-shadow-2xl animate-pet-idle" title="Clique para interagir com carinho">
+          🥚
+        </div>
+        <!-- Sombra no Chão do Habitat -->
+        <div class="w-24 h-4 rounded-full bg-black/40 blur-sm mt-3"></div>
+      </div>
+
+      <p class="text-[11px] text-gray-400 mt-4 relative z-10 italic">
+        Dica: Toque no animal para acariciá-lo ou chocá-lo!
+      </p>
+    </section>
+
+  </main>
+
+  <!-- ==========================================
+       4. DOCK FIXO DE AÇÕES INFERIOR
+       ========================================== -->
+  <nav class="fixed bottom-0 left-0 right-0 z-30 action-dock bg-gray-950/90 border-t border-gray-800/90 py-2.5 px-3">
+    <div class="max-w-md mx-auto grid grid-cols-5 gap-2">
+      
+      <!-- 1. Alimentar -->
+      <button id="dock-feed-btn" class="dock-btn flex flex-col items-center justify-center gap-1 p-2 rounded-2xl bg-orange-950/40 border border-orange-500/30 text-orange-300 hover:bg-orange-900/50">
+        <span class="text-2xl">🍎</span>
+        <span class="text-[10px] font-bold">Comer</span>
+      </button>
+
+      <!-- 2. Banho -->
+      <button id="dock-clean-btn" class="dock-btn flex flex-col items-center justify-center gap-1 p-2 rounded-2xl bg-cyan-950/40 border border-cyan-500/30 text-cyan-300 hover:bg-cyan-900/50">
+        <span class="text-2xl">🧼</span>
+        <span class="text-[10px] font-bold">Banho</span>
+      </button>
+
+      <!-- 3. Dormir / Acordar -->
+      <button id="dock-sleep-btn" class="dock-btn flex flex-col items-center justify-center gap-1 p-2 rounded-2xl bg-yellow-950/40 border border-yellow-500/30 text-yellow-300 hover:bg-yellow-900/50">
+        <span class="text-2xl">💤</span>
+        <span class="text-[10px] font-bold">Dormir</span>
+      </button>
+
+      <!-- 4. Brincar / Minigames -->
+      <button id="dock-play-btn" class="dock-btn flex flex-col items-center justify-center gap-1 p-2 rounded-2xl bg-pink-950/40 border border-pink-500/30 text-pink-300 hover:bg-pink-900/50">
+        <span class="text-2xl">🎮</span>
+        <span class="text-[10px] font-bold">Jogos</span>
+      </button>
+
+      <!-- 5. Remédio / Curar -->
+      <button id="dock-heal-btn" class="dock-btn flex flex-col items-center justify-center gap-1 p-2 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-900/50">
+        <span class="text-2xl">🧪</span>
+        <span class="text-[10px] font-bold">Curar</span>
+      </button>
+
+    </div>
+  </nav>
+
+  <!-- ==========================================
+       5. MODAIS DA SPA
+       ========================================== -->
+
+  <!-- MODAL: ALIMENTAR (SELETOR DE COMIDA) -->
+  <div id="food-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="glass-card rounded-3xl max-w-md w-full p-5 flex flex-col gap-4 border border-orange-500/30">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">🍎</span>
+          <h3 class="font-display text-lg font-bold text-white">Alimentar Animal</h3>
+        </div>
+        <button id="close-food-modal-btn" class="p-2 rounded-xl bg-gray-800 text-gray-400 hover:text-white">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <p class="text-xs text-gray-300">Escolha um alimento do seu inventário. Alimentos favoritos da espécie concedem bônus de XP e felicidade!</p>
+      <div id="food-options-grid" class="flex flex-col gap-2 max-h-80 overflow-y-auto pr-1"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: MERCADO ECOLÓGICO -->
+  <div id="store-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="glass-card rounded-3xl max-w-md w-full p-5 flex flex-col gap-4 border border-amber-500/30">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">🛒</span>
+          <h3 class="font-display text-lg font-bold text-white">Mercado da Fauna</h3>
+        </div>
+        <button id="close-store-modal-btn" class="p-2 rounded-xl bg-gray-800 text-gray-400 hover:text-white">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <p class="text-xs text-gray-300">Use suas moedas ecológicas obtidas nos minigames para abastecer o inventário de cuidados.</p>
+      <div id="store-items-grid" class="flex flex-col gap-2 max-h-80 overflow-y-auto pr-1"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: MINIGAMES -->
+  <div id="minigames-modal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
+    <div class="glass-card rounded-3xl max-w-md w-full p-5 flex flex-col gap-4 border border-pink-500/30">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">🎮</span>
+          <h3 class="font-display text-lg font-bold text-white">Centro de Minigames</h3>
+        </div>
+        <button id="close-minigames-modal-btn" class="p-2 rounded-xl bg-gray-800 text-gray-400 hover:text-white">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Abas dos Minigames -->
+      <div class="flex gap-2 p-1 rounded-2xl bg-gray-900 border border-gray-800">
+        <button id="tab-chuva-btn" class="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 text-white shadow-md flex-1">
+          🌧️ Chuva de Alimentos
+        </button>
+        <button id="tab-memoria-btn" class="px-4 py-2 rounded-xl text-xs font-bold text-gray-400 hover:text-white flex-1">
+          🧠 Memória da Fauna
+        </button>
+      </div>
+
+      <!-- View 1: Chuva de Alimentos (Canvas 2D) -->
+      <div id="minigame-chuva-view" class="flex flex-col items-center gap-3">
+        <div class="w-full flex justify-between items-center text-xs font-bold px-2">
+          <div class="text-emerald-400">Pontos: <span id="chuva-score">0</span></div>
+          <div id="chuva-lives" class="text-red-400 text-sm">❤️❤️❤️</div>
+        </div>
+
+        <div class="relative w-full aspect-[360/460] rounded-2xl overflow-hidden border border-emerald-500/30 bg-gray-950 flex items-center justify-center shadow-inner">
+          <canvas id="chuva-canvas" class="w-full h-full block cursor-pointer"></canvas>
+          <div id="chuva-overlay" class="absolute inset-0 flex items-center justify-center bg-black/70 p-4">
+            <button id="start-chuva-btn" class="px-6 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 font-bold text-white shadow-lg shadow-emerald-600/40 text-sm animate-pulse">
+              ▶️ Iniciar Partida
+            </button>
+          </div>
+        </div>
+        <p class="text-[10px] text-gray-400 text-center">Arraste ou clique para mover a cesta. Colete alimentos saudáveis e desvie do lixo!</p>
+      </div>
+
+      <!-- View 2: Memória da Fauna -->
+      <div id="minigame-memoria-view" class="hidden flex flex-col items-center gap-3">
+        <div class="w-full flex justify-between items-center text-xs font-bold px-2 text-gray-300">
+          <div>Movimentos: <span id="memoria-moves" class="text-white">0</span></div>
+          <div>Pares: <span id="memoria-matches" class="text-emerald-400">0/6</span></div>
+        </div>
+        <div id="memoria-grid" class="grid grid-cols-4 gap-2.5 w-full aspect-square"></div>
+        <button id="start-memoria-btn" class="px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-xs font-bold text-gray-200">
+          Embaralhar Cartas
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: SANTUÁRIO NATURAL & ANIMALDEX -->
+  <div id="sanctuary-modal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
+    <div class="glass-card rounded-3xl max-w-2xl w-full p-5 flex flex-col gap-4 border border-emerald-500/40 max-h-[90vh]">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">🌲</span>
+          <div>
+            <h3 class="font-display text-lg font-bold text-white">Santuário Natural & Animaldex</h3>
+            <span class="text-[10px] text-emerald-400 font-medium">Preservação das 35 Espécies Biológicas</span>
+          </div>
+        </div>
+        <button id="close-sanctuary-modal-btn" class="p-2 rounded-xl bg-gray-800 text-gray-400 hover:text-white">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Barra de Progresso do Santuário -->
+      <div class="p-3 rounded-2xl bg-gray-900/80 border border-gray-800 flex flex-col gap-1.5">
+        <div class="flex justify-between text-xs font-bold">
+          <span class="text-gray-300">Progresso da Biodiversidade</span>
+          <span id="dex-progress-text" class="text-emerald-400 font-mono">1 de 35 Espécies (3%)</span>
+        </div>
+        <div class="w-full h-2 rounded-full bg-gray-950 overflow-hidden">
+          <div id="dex-progress-bar" class="h-full bg-emerald-500 meter-bar-fill" style="width: 3%;"></div>
+        </div>
+      </div>
+
+      <!-- Abas: Biomas Vivos vs Animaldex -->
+      <div class="flex gap-2 p-1 rounded-2xl bg-gray-900 border border-gray-800">
+        <button id="tab-sanctuary-biomes-btn" class="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 text-white shadow-md flex-1">
+          🌍 Biomas Preservados
+        </button>
+        <button id="tab-sanctuary-dex-btn" class="px-4 py-2 rounded-xl text-xs font-bold text-gray-400 hover:text-white flex-1">
+          📖 Catálogo das 35 Espécies
+        </button>
+      </div>
+
+      <!-- View 1: Biomas -->
+      <div id="sanctuary-biomes-view" class="flex flex-col gap-3 overflow-y-auto max-h-96 pr-1"></div>
+
+      <!-- View 2: Animaldex -->
+      <div id="sanctuary-dex-view" class="hidden flex flex-col gap-3 overflow-y-auto max-h-96 pr-1">
+        <div class="flex items-center justify-between gap-2">
+          <label class="text-xs font-bold text-gray-300">Filtrar Classe:</label>
+          <select id="dex-filter-class" class="px-3 py-1.5 rounded-xl bg-gray-900 border border-gray-700 text-xs text-white">
+            <option value="all">Todas as Classes (35)</option>
+            <option value="Mamíferos">Mamíferos (7)</option>
+            <option value="Aves">Aves (7)</option>
+            <option value="Répteis">Répteis (7)</option>
+            <option value="Anfíbios">Anfíbios (7)</option>
+            <option value="Aquáticos">Aquáticos (7)</option>
+          </select>
+        </div>
+        <div id="species-catalog-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+      </div>
+
+      <!-- Ação de Soltura -->
+      <div class="pt-2 border-t border-gray-800">
+        <button id="release-pet-btn" class="w-full py-3 rounded-2xl bg-gray-800 text-gray-500 font-bold text-xs flex items-center justify-center gap-2 cursor-not-allowed">
+          <span>🌿</span>
+          <span>Reintroduzir Animal Adulto no Santuário (+100 Moedas)</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ADOTAR NOVO OVO -->
+  <div id="adopt-egg-modal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="glass-card rounded-3xl max-w-md w-full p-5 flex flex-col gap-4 border border-emerald-500/40">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">🥚</span>
+          <h3 class="font-display text-lg font-bold text-white">Adotar Novo Ninho</h3>
+        </div>
+        <button id="close-adopt-modal-btn" class="p-2 rounded-xl bg-gray-800 text-gray-400 hover:text-white">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <p class="text-xs text-gray-300">Selecione uma espécie para cuidar desde a incubação do ovo até a vida adulta:</p>
+      <div id="egg-options-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-80 overflow-y-auto pr-1"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: COMPARTILHAR / QR CODE & BACKUP -->
+  <div id="share-modal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="glass-card rounded-3xl max-w-md w-full p-5 flex flex-col gap-4 border border-indigo-500/30">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">📱</span>
+          <h3 class="font-display text-lg font-bold text-white">Compartilhar & Backup</h3>
+        </div>
+        <button id="close-share-modal-btn" class="p-2 rounded-xl bg-gray-800 text-gray-400 hover:text-white">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Detalhes do Pet compartilhado -->
+      <div class="p-3 rounded-2xl bg-gray-900/90 border border-gray-800 text-center">
+        <h4 id="share-pet-title" class="text-sm font-bold text-white">Capivara (Pipoca)</h4>
+        <p id="share-pet-subtitle" class="text-xs text-emerald-400 mt-0.5">Estágio: Adulto</p>
+      </div>
+
+      <!-- Container do QR Code em Canvas -->
+      <div id="share-qr-container" class="w-48 h-48 mx-auto p-2 bg-white rounded-2xl flex items-center justify-center shadow-lg"></div>
+
+      <!-- Link URL -->
+      <div class="flex gap-2">
+        <input id="share-url-input" type="text" readonly class="flex-1 px-3 py-2 rounded-xl bg-gray-900 border border-gray-700 text-xs text-gray-300" />
+        <button id="copy-share-url-btn" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md">
+          Copiar
+        </button>
+      </div>
+
+      <!-- Backup Físico JSON -->
+      <div class="pt-2 border-t border-gray-800 flex flex-col gap-2">
+        <span class="text-xs font-bold text-gray-300">Exportar / Importar Backup:</span>
+        <div class="flex gap-2">
+          <button id="export-json-btn" class="flex-1 py-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 border border-gray-700 text-xs font-bold text-white flex items-center justify-center gap-1.5">
+            <i data-lucide="download" class="w-3.5 h-3.5 text-emerald-400"></i>
+            <span>Exportar JSON</span>
+          </button>
+          <label class="flex-1 py-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 border border-gray-700 text-xs font-bold text-white flex items-center justify-center gap-1.5 cursor-pointer">
+            <i data-lucide="upload" class="w-3.5 h-3.5 text-amber-400"></i>
+            <span>Importar JSON</span>
+            <input type="file" id="import-json-input" accept=".json" class="hidden" />
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: SELETOR DE TEMAS -->
+  <div id="theme-selector-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="glass-card rounded-3xl max-w-md w-full p-5 flex flex-col gap-4 border border-pink-500/30">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">🎨</span>
+          <h3 class="font-display text-lg font-bold text-white">Temas da Natureza</h3>
+        </div>
+        <button id="close-theme-modal-btn" class="p-2 rounded-xl bg-gray-800 text-gray-400 hover:text-white">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <div id="theme-options-container" class="flex flex-col gap-2.5 max-h-80 overflow-y-auto pr-1"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: AUTENTICAÇÃO E PERFIL -->
+  <div id="auth-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="glass-card rounded-3xl max-w-md w-full p-5 flex flex-col gap-4 border border-emerald-500/30">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">👤</span>
+          <h3 class="font-display text-lg font-bold text-white">Perfil do Guardião</h3>
+        </div>
+        <button id="close-auth-modal-btn" class="p-2 rounded-xl bg-gray-800 text-gray-400 hover:text-white">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label class="text-xs font-bold text-gray-300">Escolha seu Avatar Emoji:</label>
+        <div id="avatar-options-container" class="flex flex-wrap gap-2"></div>
+      </div>
+
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-bold text-gray-300">Seu Nome ou Apelido:</label>
+        <input id="guest-name-input" type="text" placeholder="Ex: Guardião da Amazônia" class="px-3 py-2.5 rounded-xl bg-gray-900 border border-gray-700 text-sm text-white focus:border-emerald-500 outline-none" />
+      </div>
+
+      <button id="save-guest-btn" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-bold text-white text-xs shadow-md">
+        Salvar Perfil Local
+      </button>
+
+      <div class="pt-3 border-t border-gray-800 text-center">
+        <button id="google-login-btn" class="w-full py-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 border border-gray-700 text-xs font-bold text-white flex items-center justify-center gap-2">
+          <span>🌐</span>
+          <span>Entrar com Google (Firebase Cloud)</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CONFIGURAÇÕES & DUAL DB -->
+  <div id="settings-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="glass-card rounded-3xl max-w-md w-full p-5 flex flex-col gap-4 border border-gray-700 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">⚙️</span>
+          <h3 class="font-display text-lg font-bold text-white">Configurações Gerais</h3>
+        </div>
+        <button id="close-settings-modal-btn" class="p-2 rounded-xl bg-gray-800 text-gray-400 hover:text-white">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Áudio -->
+      <div class="p-3 rounded-2xl bg-gray-900/80 border border-gray-800 flex items-center justify-between">
+        <div>
+          <h5 class="text-xs font-bold text-white">Efeitos Sonoros Nativos</h5>
+          <p class="text-[10px] text-gray-400">Web Audio API procedural (Zero MP3s)</p>
+        </div>
+        <button id="mute-toggle-btn" class="p-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-base">
+          <span id="mute-icon">🔊</span>
+        </button>
+      </div>
+
+      <!-- Nuvem Firebase Dual DB -->
+      <div class="p-3.5 rounded-2xl bg-gray-900/80 border border-gray-800 flex flex-col gap-2.5">
+        <h5 class="text-xs font-bold text-white flex items-center gap-1.5">
+          <span>☁️</span> Google Firebase Cloud Firestore
+        </h5>
+        <p class="text-[10px] text-gray-400 leading-snug">
+          Insira as credenciais do seu projeto Firebase para sincronizar seu Santuário na nuvem entre dispositivos. Deixe em branco para usar o LocalStorage 100% Offline.
+        </p>
+        <div class="flex flex-col gap-2">
+          <input id="firebase-api-key-input" type="text" placeholder="API Key (ex: AIzaSy...)" class="px-3 py-2 rounded-xl bg-gray-950 border border-gray-700 text-xs text-white" />
+          <input id="firebase-project-id-input" type="text" placeholder="Project ID (ex: meu-petmaster)" class="px-3 py-2 rounded-xl bg-gray-950 border border-gray-700 text-xs text-white" />
+          <button id="save-firebase-config-btn" class="py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 font-bold text-white text-xs shadow-md">
+            Salvar Chaves da Nuvem
+          </button>
+        </div>
+      </div>
+
+      <!-- Reset -->
+      <div class="pt-2 border-t border-gray-800">
+        <button id="reset-game-btn" class="w-full py-2.5 rounded-xl bg-red-950/60 hover:bg-red-900/80 border border-red-800/80 text-red-300 font-bold text-xs">
+          ⚠️ Reiniciar Dados do Jogo (Reset Total)
+        </button>
+      </div>
+
+      <!-- Créditos Pedagógicos -->
+      <div class="text-center text-[10px] text-gray-500 pt-2">
+        PetMaster • Projeto Pedagógico Técnico em Desenvolvimento de Sistemas<br>
+        Inspirado na arquitetura do QuizMaster do Prof. Deyson Santana
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTAINER DE TOASTS FLUTUANTES -->
+  <div id="toast-container" class="fixed top-20 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Scripts Modulares em ES6 -->
+  <script type="module" src="js/app.js"></script>
+
+</body>
+</html>
